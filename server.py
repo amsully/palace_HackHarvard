@@ -32,6 +32,7 @@ def createNode():
 	print ("IN: Create Topic")
 	return render_template("newNode.html")
 
+#should be able to edit their nodes.
 
 #this links topic  to each other. 
 
