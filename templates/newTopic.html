@@ -1,0 +1,36 @@
+<!-- FOr a hacky implementaiton, you can create the angular form for this one input form . ANgular. -->
+<!DOCTYPE html>
+<html>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
+
+<body ng-app="myApp" ng-controller="newTopicCntlr">
+<p>Enter a new topic</p>
+
+ <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_title" placeholder="Topic TItle" required/></center>
+  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_description" placeholder="Topic Description" required/></center>
+
+  <button style="color:rgb(39,98,117)"  type="button" class="btn btn-default" ng-click="createTopic()">Submit</button>
+
+<script> 
+//This creates a new collection, but is empty. 
+var app = angular.module("myApp", []); 
+app.controller("newTopicCntlr", function($scope, $http){
+	$scope.topic_title="";
+	$scope.topic_description=""; 
+	$scope.rating = 5; //default. 
+
+	$scope.createTopic = function(){
+	console.log("The title gottne is "+	$scope.topic_title+" the description is "+ $scope.topic_description); 
+
+	}
+
+
+}); 
+
+</script>
+
+    <span class="highlight"><script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js"></script></span
+</body>
+
+</html>
