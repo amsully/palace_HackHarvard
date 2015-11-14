@@ -27,6 +27,11 @@ def createTopic():
 	print ("IN HERE")
 	return render_template("newTopic.html")
 
+@app.route("/createNode")
+def createNode():
+	print ("IN: Create Topic")
+	return render_template("newNode.html")
+
 
 #this links topic  to each other. 
 

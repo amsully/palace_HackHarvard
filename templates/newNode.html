@@ -1,0 +1,50 @@
+<!-- FOr a hacky implementaiton, you can create the angular form for this one input form . ANgular. -->
+<!DOCTYPE html>
+<html>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
+
+<body ng-app="myApp" ng-controller="newNodeCtlr" style="background-color: gray;">
+<p>Enter a new node</p>
+
+ <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_uid" placeholder="Topic UID (temp)" required/></center>
+ <center> <input type="text" ng-required="true" class="form-control"  ng-model = "node_link" placeholder="Node Link" required/></center>
+  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "node_description" placeholder="Node Description" required/></center>
+
+  <button style="color:rgb(39,98,117)"  type="button" class="btn btn-default" ng-click="createNode()">Submit</button>
+
+<script> 
+//This creates a new collection, but is empty. 
+var myApp = angular.module("myApp", []); 
+myApp.controller("newNodeCtlr", function($scope, $http){
+	$scope.node_link="";
+	$scope.node_description=""; 
+	$scope.node_rating = 0; //default. 
+
+	$scope.createNode = function(){
+	console.log("Topic UID: " + $scope.topic_uid + " The link gotten is "+	$scope.node_link+" the description is "+ $scope.node_description); 
+	$http({
+	method: "POST",
+      		url: "http://127.0.0.1:5000/topic/newNode", 
+      		data: {
+      	topic_uid: $scope.topic_uid
+      	node_link:  $scope.node_link , 
+   		node_description: $scope.node_description, 
+   		node_rating: $scope.node_rating 
+	}
+	}).success(function(data){
+		console.log("SUCCESS"); 
+	}).error(function(err){
+		console.log(JSON.stringify(err)); 
+	})
+
+
+}
+}); 
+
+</script>
+
+    <span class="highlight"><script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js"></script></span
+</body>
+
+</html>
