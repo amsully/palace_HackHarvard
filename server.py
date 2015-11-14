@@ -7,7 +7,7 @@ from mongoclient import client
 
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '/templates')
 
 
 app = Flask(__name__, tmpl_dir)
@@ -49,10 +49,13 @@ def createTopicBackend():
 	#print result
 	#print "FINDING THE PARENT NODE"
 	myCursor =  db.find({'name':parent_topic}) 
-	
+
 	#if the parent topic does not exist, create a new one. 
 	#if there is a otpic. 
+
+
 	if myCursor.count() > 0 : 
+
 		#insert the uUID of the new topic into that parent topic. 
   		myCursor = db.find({'name':parent_topic })
     	topic = myCursor[0]
@@ -79,16 +82,20 @@ def createTopicNode():
 	node_link = request.get_json().get("node_link", "")
 	node_description = request.get_json().get("node_description", "")
 	node_rating = request.get_json().get("node_rating", "")
-	client = MongoClient()
+	
 	db = client.topics
 	topic = db.topic_name
-	result = topic.insert({ 'UUID': 12452523324, 'node_description': node_description, 'rating': node_rating, 'connected_nodes': [], 'topic_branches': [] })
+	result = topic.insert({ 'node_description': node_description, 'rating': node_rating, 'connected_nodes': [], 'topic_branches': [] })
 	print db
 	return "done"
 
 
 if __name__ == '__main__':
-    app.run()
+	
+
+	db = client.topics.topic_name
+	result = db.insert_one({ 'name': "Palace", 'description': "Start", 'rating': 10, 'connected_nodes': [], 'topic_branches': [] }).inserted_id
+	app.run()
 
 
 
