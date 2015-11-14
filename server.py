@@ -3,7 +3,7 @@ import os
 from flask.ext.pymongo import PyMongo
 import pymongo
 from pymongo import MongoClient
-
+from mongoclient import client
 
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -14,6 +14,7 @@ app = Flask(__name__, tmpl_dir)
 app.config['DEBUG'] = True
 app.config['PROPAGATE_EXCEPTIONS'] = True
 mongo = PyMongo(app)
+
 
 
 @app.route('/')
@@ -46,16 +47,16 @@ def createTopicBackend():
 	
 	#if the parent topic does not exist, create a new one. 
 	#if there is a otpic. 
-	if myCursor.count() = 1 : 
+	if myCursor.count() > 0 : 
 		#insert the uUID of the new topic into that parent topic. 
   		myCursor = db.find({'name':parent_topic })
-    		for topic in myCursor: 
-    			print topic
-    			list_topics = topic['topic_branches'] #get the list of branches. 
-    			print "TOPICS CONNECTED"
-    			print list_topics 
-    			list_topics.append(result) #should append to the topic. 
-    			print topic  
+    	topic = myCursor[0]
+    	print topic
+    	list_topics = topic['topic_branches'] #get the list of branches. 
+    	print "TOPICS CONNECTED"
+    	print list_topics 
+    	list_topics.append(result) #should append to the topic. 
+    	print topic  
 
 
 	return "done"
@@ -67,9 +68,11 @@ def createTopicBackend():
 
 
 
-
-
-
 if __name__ == '__main__':
-	client = MongoClient()
     app.run()
+
+
+
+
+
+
