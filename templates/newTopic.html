@@ -14,18 +14,30 @@
 
 <script> 
 //This creates a new collection, but is empty. 
-var app = angular.module("myApp", []); 
-app.controller("newTopicCntlr", function($scope, $http){
+var myApp = angular.module("myApp", []); 
+myApp.controller("newTopicCntlr", function($scope, $http){
 	$scope.topic_title="";
 	$scope.topic_description=""; 
 	$scope.rating = 5; //default. 
 
 	$scope.createTopic = function(){
-	console.log("The title gottne is "+	$scope.topic_title+" the description is "+ $scope.topic_description); 
-
+	console.log("The title gotten is "+	$scope.topic_title+" the description is "+ $scope.topic_description); 
+	$http({
+	method: "POST",
+      		url: "http://127.0.0.1:5000/topic/newTopic", 
+      		data: {
+      	topic_name:  $scope.topic_title , 
+   		topic_description: $scope.topic_description, 
+   		rating: $scope.rating 
 	}
+	}).success(function(data){
+		console.log("SUCCESS"); 
+	}).error(function(err){
+		console.log(JSON.stringify(err)); 
+	})
 
 
+}
 }); 
 
 </script>

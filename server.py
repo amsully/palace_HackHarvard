@@ -1,6 +1,8 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import os 
 from flask.ext.pymongo import PyMongo
+import pymongo
+from pymongo import MongoClient
 
 
 
@@ -21,13 +23,24 @@ def hello_world():
 
 @app.route("/createTopic")
 def createTopic():
-	print "IN HERE"
+	print ("IN HERE")
 	return render_template("newTopic.html")
 
 
-@app.route("/topic/<topic_title>", methods=["POST"])
+@app.route("/topic/newTopic", methods=["POST"])
 def createTopicBackend():
-	print "IN CREATING THE BACKEND" 
+	print ("IN CREATING THE BACKEND")
+	print request
+	topic_name = request.get_json().get("topic_name", "")
+	topic_description = request.get_json().get("topic_description", "")
+	rating = request.get_json().get("rating", "")
+	client = MongoClient()
+	db = client.topics
+	topic = db.topic_name
+	result = topic.insert({ 'UUID': 12452523324, 'description': topic_description, 'rating': rating, 'connected_nodes': [], 'topic_branches': [] })
+	print db
+	return "done"
+
 
 
 if __name__ == '__main__':
