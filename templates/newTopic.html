@@ -7,10 +7,13 @@
 <body ng-app="myApp" ng-controller="newTopicCntlr">
 <p>Enter a new topic</p>
 
+ 
  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_title" placeholder="Topic TItle" required/></center>
+  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "parent_topic" placeholder="Parent Topic" required/></center>
   <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_description" placeholder="Topic Description" required/></center>
 
   <button style="color:rgb(39,98,117)"  type="button" class="btn btn-default" ng-click="createTopic()">Submit</button>
+
 
 <script> 
 //This creates a new collection, but is empty. 
@@ -19,16 +22,18 @@ myApp.controller("newTopicCntlr", function($scope, $http){
 	$scope.topic_title="";
 	$scope.topic_description=""; 
 	$scope.rating = 5; //default. 
+	$scope.parent_topic = ""; 
 
 	$scope.createTopic = function(){
-	console.log("The title gotten is "+	$scope.topic_title+" the description is "+ $scope.topic_description); 
+	console.log("The title gotten is "+	$scope.topic_title+" the description is "+ $scope.topic_description +" the parent topic is "+$scope.parent_topic  ); 
 	$http({
 	method: "POST",
       		url: "http://127.0.0.1:5000/topic/newTopic", 
       		data: {
       	topic_name:  $scope.topic_title , 
    		topic_description: $scope.topic_description, 
-   		rating: $scope.rating 
+   		parent_topic : $scope.parent_topic, 
+   		rating: $scope.rating
 	}
 	}).success(function(data){
 		console.log("SUCCESS"); 

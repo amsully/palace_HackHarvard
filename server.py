@@ -27,21 +27,49 @@ def createTopic():
 	return render_template("newTopic.html")
 
 
+#this links topic  to each other. 
+
 @app.route("/topic/newTopic", methods=["POST"])
 def createTopicBackend():
-	print ("IN CREATING THE BACKEND")
-	print request
+	#print ("IN CREATING THE BACKEND")
+	#print request
 	topic_name = request.get_json().get("topic_name", "")
 	topic_description = request.get_json().get("topic_description", "")
 	rating = request.get_json().get("rating", "")
-	client = MongoClient()
-	db = client.topics
-	topic = db.topic_name
-	result = topic.insert({ 'UUID': 12452523324, 'description': topic_description, 'rating': rating, 'connected_nodes': [], 'topic_branches': [] })
-	print db
+	parent_topic = request.get_json().get("parent_topic", "")
+
+	db = client.topics.topic_name
+	result = db.insert_one({ 'name': topic_name, 'description': topic_description, 'rating': rating, 'connected_nodes': [], 'topic_branches': [] }).inserted_id
+	#print result
+	#print "FINDING THE PARENT NODE"
+	myCursor =  db.find({'name':parent_topic}) 
+	
+	#if the parent topic does not exist, create a new one. 
+	#if there is a otpic. 
+	if myCursor.count() = 1 : 
+		#insert the uUID of the new topic into that parent topic. 
+  		myCursor = db.find({'name':parent_topic })
+    		for topic in myCursor: 
+    			print topic
+    			list_topics = topic['topic_branches'] #get the list of branches. 
+    			print "TOPICS CONNECTED"
+    			print list_topics 
+    			list_topics.append(result) #should append to the topic. 
+    			print topic  
+
+
 	return "done"
 
 
 
+	#The lfow ist that i need to save this into mongodb. 
+
+
+
+
+
+
+
 if __name__ == '__main__':
+	client = MongoClient()
     app.run()
