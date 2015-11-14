@@ -1,4 +1,0 @@
-# DATABASE NOTES
-
-Testing
-
