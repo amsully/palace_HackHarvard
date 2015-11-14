@@ -71,7 +71,21 @@ def createTopicBackend():
 
 	#The lfow ist that i need to save this into mongodb. 
 
+@app.route("/topic/newNode", methods=["POST"])
+def createTopicNode():
+	print ("IN CREATING NODE")
+	print request
 
+	
+	node_link = request.get_json().get("node_link", "")
+	node_description = request.get_json().get("node_description", "")
+	node_rating = request.get_json().get("node_rating", "")
+	client = MongoClient()
+	db = client.topics
+	topic = db.topic_name
+	result = topic.insert({ 'UUID': 12452523324, 'node_description': node_description, 'rating': node_rating, 'connected_nodes': [], 'topic_branches': [] })
+	print db
+	return "done"
 
 
 if __name__ == '__main__':
