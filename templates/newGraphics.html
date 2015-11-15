@@ -232,6 +232,35 @@ function onClick(event) {
     //start to request user input
 //******************************************************************************to be finished
 }
+//moveScreen
+//REQUIRES: arrow kye has been pressed
+//ENSURES: adjust the location for all topics correspondingly
+function moveScreen(dx,dy) {
+    for (var i=0;i<topics.length;i++) {
+        topics[i].reposition(topics[i].centerX+dx,
+                             topics[i].centerY+dy);
+    }
+}
+
+//onKeyDown
+//REQUIRES: event key press happens
+//ENSURES: adjust graphics according to the key pressed
+function onKeyDown(event) {
+    var upArrow = 38;
+    var downArrow = 40;
+    var leftArrow = 37;
+    var rigthArrow = 39;
+    var d = 200;
+    if (event.keyCode == upArrow) {
+        moveScreen(0,d);
+    } else if (event.keyCode == downArrow) {
+        moveScreen(0,-d);
+    } else if (event.keyCode == rigthArrow) {
+        moveScreen(-d,0);
+    } else if (event.keyCode == leftArrow) {
+        moveScreen(d,0);
+    }
+}
 
 
 //Event Based Animation Wrappers [Controller]
@@ -240,11 +269,16 @@ function onClickWrapper(event) {
     onClick(event);
     redrawAll();};
 
+function onKeyDownWrapper(event) {
+    onKeyDown(event);
+    redrawAll();};
+
 //run
 //REQUIRES: None
 //ENSURES: Driving function
 function run() {
     canvas.addEventListener('click', onClickWrapper, false);
+    canvas.addEventListener('keydown',onKeyDownWrapper, false);
     // make canvas focusable, then give it focus!
     canvas.setAttribute('tabindex','0');
     canvas.focus();
