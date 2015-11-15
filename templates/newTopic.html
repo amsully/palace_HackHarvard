@@ -360,7 +360,7 @@ function Topic(title,rating) {
     //-------------------- attributes --------------------
     t.centerX = defaultCenterX;
     t.centerY = defaultCenterY;
-    t.radius = defaultFontSize*title.length*3/4;
+    t.radius = defaultFontSize*title.length*2/3;
     t.title = title;
     t.content = [];
     t.rating = rating;
@@ -590,7 +590,7 @@ function adjustPosition() {
 };
 function titleExists(title) {
     for (var i=0;i<topics.length;i++) {
-        if (topics[i].tilte==title) {
+        if (topics[i].title==title) {
             return true;
         };
     };
