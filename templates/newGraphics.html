@@ -30,7 +30,7 @@ var defaultContentFont = "20px Arial";
 var defaultFontColor = "rgb(50,205,50)";//lime green
 var defaultButtonColor = "rgb(250,128,114)";//salmon
 var defaultStroke = "rgb(255,215,0)";//gold
-var defaultFill = "rgb(255,250,205)";//lemon chiffon
+var defaultFill = "rgb(255,255,0)";//yellow
 
 //default color for connection lines
 var connectionStroke = "green";
@@ -211,18 +211,42 @@ function Topic(title,rating) {
             ctx.textAlign = "center";
             ctx.fillStyle = "rgb(240,255,255)";//azure
             ctx.fillText(t.title,t.centerX,t.centerY+40/3);
+
         } else {
-            //cover connection lines
+            if (t.title =="Palace") {
+                ctx.fillStyle = "rgb(240,255,255)";//azure;
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+40,0,2*Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = "rgb(135,206,250)";//light sky blue
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.fill();
+            } else {
+                t.button.draw();
+                //draw outline 
+                ctx.strokeStyle = t.stroke;
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+                ctx.stroke();
+
+                //cover connection lines
+                ctx.fillStyle = "rgb(255,255,224)";//light yellow
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = "rgb(255,255,150)";
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+10,0,2*Math.PI);
+                ctx.fill();
+            };
+
             ctx.fillStyle = t.fill;
             ctx.beginPath();
             ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
             ctx.fill();
-
-            //draw outline 
-            ctx.strokeStyle = t.stroke;
-            ctx.beginPath();
-            ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
-            ctx.stroke();
 
             //display text
             ctx.font = t.font;
@@ -230,9 +254,7 @@ function Topic(title,rating) {
             ctx.fillStyle = t.fontColor;
             ctx.fillText(t.title,t.centerX,t.centerY+t.fontSize/3);
 
-            if (t.title!="Palace") {
-            t.button.draw();
-            };
+            
         }
     };
     t.drawConnectionLines = function() {
