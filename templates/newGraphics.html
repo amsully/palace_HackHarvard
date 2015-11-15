@@ -1,0 +1,239 @@
+<html>
+
+<canvas id="myCanvas" width="1366" height="768"
+        style="border:0px solid #000000;">
+</canvas>
+
+<script>
+//****************************** Set Up ******************************
+//Setting up the canvas
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+//****************************** Variables ******************************
+//selectedShape: indicating the shape of next Topic to be created
+var selectedShape = "Rectangle";
+
+//clickedTopic: to be replaced by clicking "+" "-" later
+var clickedTopic;
+
+//defaultX: default Size and outline color when create new topic
+var defaultCenterX = 25;
+var defaultCenterY = 25; 
+var defaultWidth = 50;
+var defaultHeight = 50;
+var defaultStroke = "black";
+
+//default color for connection lines
+var connectionStroke = "green";
+
+
+
+//****************************** Classes ******************************
+
+//Topic (Class) [Model]
+//REQUIRES: either initializing the rootTopic or a request has been made
+//ENSURES: create an instance of class Topic
+function Topic(title,content,rating,shape) {
+    var t = {};
+
+    //-------------------- attributes --------------------
+    t.centerX = defaultCenterX;
+    t.centerY = defaultCenterY;
+    t.width = defaultWidth;
+    t.height = defaultHeight;
+    t.leftX = t.centerX-t.width/2;
+    t.leftY = t.centerY-t.height/2;
+
+    t.title = title;
+    t.content = content;
+    t.rating = rating;
+    t.shape = shape;
+    //color
+    t.stroke = defaultStroke;
+
+    //topics connected to the current one
+    //both fathers and sons can be multiple
+    t.fathers = [];
+    t.sons = [];
+
+    //-------------------- methods --------------------
+    //drawing 
+    t.drawItself = function() {
+        if (t.shape=="Rectangle") {
+            //cover connection lines
+            ctx.fillStyle = "white";
+            ctx.fillRect(t.leftX,t.leftY,t.width,t.height);
+
+            ctx.strokeStyle = t.stroke;
+            ctx.strokeRect(t.leftX,t.leftY,t.width,t.height);
+        };
+        return 42;
+    };
+    t.drawConnectionLines = function() {
+        ctx.strokeStyle = connectionStroke;
+        for (var i=0;i<t.sons.length;i++) {
+            ctx.beginPath();
+            ctx.moveTo(t.centerX,t.centerY);
+            ctx.lineTo(t.sons[i].centerX,t.sons[i].centerY);
+            ctx.stroke();
+        };
+    };
+
+    //checking
+    t.isClickedOn = function(x,y) {
+        if (t.shape=="Rectangle") {
+            x0,y0 = t.leftX,t.leftY;
+            x1,y1 = (x0+t.width),(y0+t.height);
+            if ((x0<=x) && (x<=x1) && (y0<=y) && (y<=y1)) {
+                return true;
+            } else {
+                return false;
+            };
+        };
+        return 42;
+    };
+
+    //modification
+    //connectTo
+    //REQUIRES: father topic exists
+    //ENSURES: build connection between father and current topic
+    //         double ways connection
+    t.buildConnectionFrom = function(father) {
+        father.sons.push(t);
+        t.fathers.push(father);
+    };
+
+    return t;
+};
+
+var rootTopic = Topic("1","Hah hah",5,"Rectangle");
+//******************************************************************************to be changed
+
+//****************************** Functions ******************************
+
+//findTopic (helper)
+//REQUIRES: topic exists
+//ENSURES: return the topic object
+function findTopic(targetTitle) {
+    var queue = [];
+    var currTopic;
+    queue.push(rootTopic);
+    while (queue!=[]) {
+        currTopic = queue.pop();
+        if (currTopic.title == targetTitle) {
+            return currTopic;
+        };
+    };
+};
+
+//adjustPosition 
+//REQUIRES: A new Topic has been made
+//ENSURES: Adjust Position for all topics
+function adjustPosition() {
+    return 42;
+};
+
+//createTopicByRequest
+//REQUIRES: a request by user has been made
+//ENSURES: create a new topic according to user's request
+function createTopicByRequest(topic_name,topic_description,parent_topic,rating) {
+    var father = findTopic(parent_topic);
+    var currTopic = Topic(topic_name,topic_description,rating,selectedShape);
+    currTopic.buildConnectionFrom(father);
+    adjustPosition();
+};
+
+//redrawAll [View]
+//REQUIRES: None
+//ENSURES: the canvas is redrawed
+function redrawAll() {
+    // erase everything -- not efficient, but simple!
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var queue = [];
+    var currTopic;
+    //First time draw the connection lines
+    queue.push(rootTopic);
+    while (queue!=[]) {
+        currTopic = queue.pop();
+        console.log(currTopic.title);
+        currTopic.drawConnectionLines();
+        for (var i=0;i<currTopic.sons.length;i++) {
+            queue.push(currTopic.sons[i]);
+        };
+    };
+    //Second time draw the topic to cover the extra portion of lines
+    queue.push(rootTopic);
+    while (queue!=[]) {
+        currTopic = queue.pop();
+        currTopic.drawItself();
+        for (var i=0;i<currTopic.sons.length;i++) {
+            queue.push(currTopic.sons[i]);
+        };
+    };
+};
+
+//onClick 
+//REQUIRES: event mouse clicked happens
+//ENSURES: 
+function onClick(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    var queue = [];
+    var currTopic;
+    queue.push(rootTopic);
+    while (queue!=[]) {
+        //to be replaced by click "+" "-" later
+        currTopic = queue.pop();
+        if (currTopic.isClickedOn(x,y)==true) {
+            clickedTopic = currTopic;
+            return;
+        }
+    }
+    //start to request user input
+//******************************************************************************to be finished
+}
+
+//onMouseMove
+//REQUIRES: event pressing mouse has happened already
+//          and mouse is dragging
+//ENSURES:
+function onMouseMove(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    return 42;
+};
+
+//Event Based Animation Wrappers [Controller]
+//After processing an event, redraw the canvas
+function onClickWrapper(event) {
+    onClick(event);
+    redrawAll();};
+
+function onMouseMoveWrapper(event) {
+    onMouseMove(event);
+    redrawAll();};
+
+//run
+//REQUIRES: None
+//ENSURES: Driving function
+function run() {
+    canvas.addEventListener('click', onClickWrapper, false);
+    canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
+    // make canvas focusable, then give it focus!
+    canvas.setAttribute('tabindex','0');
+    canvas.focus();
+};
+
+//****************************** Testing ******************************
+//testShapes (tester)
+//REQUIRES: None
+//ENSURES: check programming running correctly
+function testShapes() {
+    return 42;
+};
+
+run();
+ 
+</script>
+</html>
