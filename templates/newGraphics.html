@@ -29,6 +29,7 @@ var defaultContentFont = "20px Arial";
 //color
 var defaultFontColor = "rgb(50,205,50)";//lime green
 var defaultButtonColor = "rgb(250,128,114)";//salmon
+var defaultContentColor = "rgb(173,255,47)";//green yellow
 var defaultStroke = "rgb(255,215,0)";//gold
 var defaultFill = "rgb(255,255,0)";//yellow
 
@@ -57,6 +58,7 @@ function Content(topic,content) {
     c.content = content;
     c.topic = topic;
 
+    c.fill = defaultContentColor;
     c.stroke = contentStroke;
 
     c.drawItself = function() {
@@ -64,12 +66,14 @@ function Content(topic,content) {
         leftX = c.centerX-c.width/2;
         leftY = c.centerY-c.height/2;
         //cover connection lines
-        ctx.fillStyle = "white";
-        ctx.fillRect(leftX,leftY,c.width,c.height);
+        ctx.fillStyle = "rgb(229,255,204)";
+        ctx.fillRect(leftX-10,leftY-10,c.width+20,c.height+20);
 
-        //draw outline 
-        ctx.strokeStyle = c.stroke;
-        ctx.strokeRect(leftX,leftY,c.width,c.height);
+        ctx.fillStyle = "rgb(204,255,104)";
+        ctx.fillRect(leftX-5,leftY-5,c.width+10,c.height+10);
+
+        ctx.fillStyle = c.fill;
+        ctx.fillRect(leftX,leftY,c.width,c.height);
 
         //display text
         ctx.font = c.font;
@@ -224,13 +228,6 @@ function Topic(title,rating) {
                 ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
                 ctx.fill();
             } else {
-                t.button.draw();
-                //draw outline 
-                ctx.strokeStyle = t.stroke;
-                ctx.beginPath();
-                ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
-                ctx.stroke();
-
                 //cover connection lines
                 ctx.fillStyle = "rgb(255,255,224)";//light yellow
                 ctx.beginPath();
@@ -241,6 +238,13 @@ function Topic(title,rating) {
                 ctx.beginPath();
                 ctx.arc(t.centerX,t.centerY,t.radius+10,0,2*Math.PI);
                 ctx.fill();
+
+                t.button.draw();
+                //draw outline 
+                ctx.strokeStyle = t.stroke;
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+                ctx.stroke();
             };
 
             ctx.fillStyle = t.fill;
@@ -402,7 +406,7 @@ function adjustPosition() {
         }
 
     }
-    var radius = canvas.width/2;
+    var radius = canvas.width;
     var dAngle;
     if (topics[0].sons.length>0) {
         dAngle = 2*Math.PI/topics[0].sons.length;
@@ -415,7 +419,7 @@ function adjustPosition() {
         topics[0].sons[i].reposition(topics[0].centerX+dx,
                                      topics[0].centerY-dy);
         topics[0].sons[i].adjustContentPosition();
-        adjustSonTopicPosition(topics[0],topics[0].sons[i],4);
+        adjustSonTopicPosition(topics[0],topics[0].sons[i],2);
     };
 };
 
@@ -593,6 +597,10 @@ function test() {
     topics[9].buildConnectionFrom(topics[1]);
     topics[10].buildConnectionFrom(topics[1]);
     createTopicByRequest("11","...","2",5);
+    createTopicByRequest("12","...","2",5);
+    createTopicByRequest("13","...","2",5);
+    createTopicByRequest("14","...","2",5);
+    createTopicByRequest("15","...","2",5);
 }
 test();
 </script>
