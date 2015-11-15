@@ -1,0 +1,43 @@
+
+
+
+<!DOCTYPE html>
+<html>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
+
+<body ng-app="myApp" ng-controller="newTest" style="background-color: gray;">
+<p>Enter a new node</p>
+
+
+<script> 
+//This creates a new collection, but is empty. 
+var myApp = angular.module("myApp", []); 
+myApp.controller("nnewNodeCtlr", function($scope, $http){
+ $http("GET", 'http://127.0.0.1:5000/topic/newNode').
+    success(function(topic_uid, node_link, node_description, node_rating) {
+      $scope.newData = data;
+    }).
+    error(function(topic_uid, node_link, node_description, node_rating) {
+      // log error
+      console.log("Error init")
+    });
+
+}); 
+
+</script>
+
+
+<body ng-app="myApp">
+  <div ng-controller="newNodeCtlr">
+    
+      <li>{{data.topic_uid}}</li>
+
+  </div>
+</body>
+
+
+    <span class="highlight"><script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js"></script></span>
+</body>
+
+</html>
