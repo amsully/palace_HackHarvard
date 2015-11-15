@@ -1,7 +1,7 @@
 <html>
 
-<canvas id="myCanvas" width="1366" height="768"
-        style="border:0px solid #000000;">
+<canvas id="myCanvas" width="600" height="600"
+        style="border:1px solid #000000;">
 </canvas>
 
 <script>
@@ -22,19 +22,22 @@ var defaultCenterX = 25;
 var defaultCenterY = 25; 
 var defaultWidth = 50;
 var defaultHeight = 50;
+var defaultFont = "15px Arial";
+//color
 var defaultStroke = "black";
 
 //default color for connection lines
 var connectionStroke = "green";
 
-
+//topics;
+var topics = [];
 
 //****************************** Classes ******************************
 
 //Topic (Class) [Model]
 //REQUIRES: either initializing the rootTopic or a request has been made
 //ENSURES: create an instance of class Topic
-function Topic(title,content,rating,shape) {
+function Topic(title,content,rating) {
     var t = {};
 
     //-------------------- attributes --------------------
@@ -48,7 +51,8 @@ function Topic(title,content,rating,shape) {
     t.title = title;
     t.content = content;
     t.rating = rating;
-    t.shape = shape;
+    t.shape = selectedShape;
+    t.font = defaultFont;
     //color
     t.stroke = defaultStroke;
 
@@ -65,8 +69,16 @@ function Topic(title,content,rating,shape) {
             ctx.fillStyle = "white";
             ctx.fillRect(t.leftX,t.leftY,t.width,t.height);
 
+            //draw outline 
             ctx.strokeStyle = t.stroke;
             ctx.strokeRect(t.leftX,t.leftY,t.width,t.height);
+
+            //display text
+            ctx.font = t.font;
+            ctx.textAlign = "center";
+            ctx.fillStyle = t.stroke;
+            ctx.fillText(t.title,t.centerX,t.centerY);
+
         };
         return 42;
     };
@@ -83,6 +95,7 @@ function Topic(title,content,rating,shape) {
     //checking
     t.isClickedOn = function(x,y) {
         if (t.shape=="Rectangle") {
+            var x0,y0,x1,y1;
             x0,y0 = t.leftX,t.leftY;
             x1,y1 = (x0+t.width),(y0+t.height);
             if ((x0<=x) && (x<=x1) && (y0<=y) && (y<=y1)) {
@@ -103,12 +116,17 @@ function Topic(title,content,rating,shape) {
         father.sons.push(t);
         t.fathers.push(father);
     };
+    t.reposition = function(newCenterX,newCenterY) {
+        t.centerX = newCenterX;
+        t.centerY = newCenterY;
+        t.leftX = newCenterX-t.width/2;
+        t.leftY = newCenterY-t.height/2;
+    }
 
     return t;
 };
-
-var rootTopic = Topic("1","Hah hah",5,"Rectangle");
-//******************************************************************************to be changed
+topics.push(Topic("Palace","Start",10));
+topics[0].reposition(canvas.width/2,canvas.height/2);
 
 //****************************** Functions ******************************
 
@@ -116,14 +134,10 @@ var rootTopic = Topic("1","Hah hah",5,"Rectangle");
 //REQUIRES: topic exists
 //ENSURES: return the topic object
 function findTopic(targetTitle) {
-    var queue = [];
-    var currTopic;
-    queue.push(rootTopic);
-    while (queue!=[]) {
-        currTopic = queue.pop();
-        if (currTopic.title == targetTitle) {
-            return currTopic;
-        };
+    for (var i=0;i<topics.length;i++) {
+        if (topics[i].title == targetTitle) {
+            return topics[i];
+        }
     };
 };
 
@@ -131,7 +145,28 @@ function findTopic(targetTitle) {
 //REQUIRES: A new Topic has been made
 //ENSURES: Adjust Position for all topics
 function adjustPosition() {
-    return 42;
+    //reposition the rootTopic
+    function adjustSonTopicPosition(father,currTopic) {
+        //the number of total branches going in/out from currTopic
+        var r = 40;
+        var divisor = 1+currTopic.sons.length;
+        var dAngle = 2*Math.PI/divisor;
+        var angle;
+        var startAngle = Math.atan((father.centerY-currTopic.centerY)/
+                                   (father.centerX-currTopic.centerX));
+        for (var i=0;i<currTopic.sons.length;i++) {
+            angle = startAngle + dAngle*i;
+            dx = Math.cos(angle)*r;
+            dy = Math.sin(angle)*r;
+            currTopic.sons[i].reposition(currTopic.centerX+dx,
+                                         currTopic.centerY+dy);
+            adjustSonTopicPosition(currTopic,currTopic.sons[i]);
+        }
+
+    }
+    for (var i=0;i<topics[0].sons.length;i++) {
+        adjustSonTopicPosition(topics[0],topics[0].sons[i]);
+    }
 };
 
 //createTopicByRequest
@@ -139,7 +174,7 @@ function adjustPosition() {
 //ENSURES: create a new topic according to user's request
 function createTopicByRequest(topic_name,topic_description,parent_topic,rating) {
     var father = findTopic(parent_topic);
-    var currTopic = Topic(topic_name,topic_description,rating,selectedShape);
+    var currTopic = Topic(topic_name,topic_description,rating);
     currTopic.buildConnectionFrom(father);
     adjustPosition();
 };
@@ -150,59 +185,26 @@ function createTopicByRequest(topic_name,topic_description,parent_topic,rating) 
 function redrawAll() {
     // erase everything -- not efficient, but simple!
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var queue = [];
-    var currTopic;
     //First time draw the connection lines
-    queue.push(rootTopic);
-    while (queue!=[]) {
-        currTopic = queue.pop();
-        console.log(currTopic.title);
-        currTopic.drawConnectionLines();
-        for (var i=0;i<currTopic.sons.length;i++) {
-            queue.push(currTopic.sons[i]);
-        };
+    for (var i=0;i<topics.length;i++) {
+        topics[i].drawConnectionLines();
     };
     //Second time draw the topic to cover the extra portion of lines
-    queue.push(rootTopic);
-    while (queue!=[]) {
-        currTopic = queue.pop();
-        currTopic.drawItself();
-        for (var i=0;i<currTopic.sons.length;i++) {
-            queue.push(currTopic.sons[i]);
-        };
+    for (var i=0;i<topics.length;i++) {
+        topics[i].drawItself();
     };
 };
-
 //onClick 
 //REQUIRES: event mouse clicked happens
 //ENSURES: 
 function onClick(event) {
     var x = event.pageX - canvas.offsetLeft;  
     var y = event.pageY - canvas.offsetTop;
-    var queue = [];
-    var currTopic;
-    queue.push(rootTopic);
-    while (queue!=[]) {
-        //to be replaced by click "+" "-" later
-        currTopic = queue.pop();
-        if (currTopic.isClickedOn(x,y)==true) {
-            clickedTopic = currTopic;
-            return;
-        }
-    }
+    
     //start to request user input
 //******************************************************************************to be finished
 }
 
-//onMouseMove
-//REQUIRES: event pressing mouse has happened already
-//          and mouse is dragging
-//ENSURES:
-function onMouseMove(event) {
-    var x = event.pageX - canvas.offsetLeft;  
-    var y = event.pageY - canvas.offsetTop;
-    return 42;
-};
 
 //Event Based Animation Wrappers [Controller]
 //After processing an event, redraw the canvas
@@ -210,30 +212,30 @@ function onClickWrapper(event) {
     onClick(event);
     redrawAll();};
 
-function onMouseMoveWrapper(event) {
-    onMouseMove(event);
-    redrawAll();};
-
 //run
 //REQUIRES: None
 //ENSURES: Driving function
 function run() {
     canvas.addEventListener('click', onClickWrapper, false);
-    canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
     // make canvas focusable, then give it focus!
     canvas.setAttribute('tabindex','0');
     canvas.focus();
-};
-
-//****************************** Testing ******************************
-//testShapes (tester)
-//REQUIRES: None
-//ENSURES: check programming running correctly
-function testShapes() {
-    return 42;
+    redrawAll();
 };
 
 run();
- 
+
+//test
+//REQUIRES: None
+//ENSURES: tba
+function test() {
+    topics.push(Topic("2","...",5));
+    topics.push(Topic("3","...",5));
+    topics[1].buildConnectionFrom(topics[0]);
+    topics[2].buildConnectionFrom(topics[0]);
+    adjustPosition();
+    console.log(topics[1].centerX,topics[1].centerY);
+}
+test();
 </script>
 </html>
