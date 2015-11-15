@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
 	db = client.topics.topic_name
 	result = db.insert_one({ 'name': "Palace", 'description': "Start", 'rating': 10, 'connected_nodes': [], 'topic_branches': [] }).inserted_id
-	app.run()
+	app.run(host='0.0.0.0',port=80)
 
 
 
