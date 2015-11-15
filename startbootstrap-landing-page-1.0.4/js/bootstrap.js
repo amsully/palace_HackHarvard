@@ -221,6 +221,18 @@ if (typeof jQuery === 'undefined') {
       }
     }, this), 0)
   }
+ 
+var frameSrc = "/login";
+
+$('#openBtn').click(function(){
+    $('#myModal').on('show', function () {
+
+        $('iframe').attr("src",frameSrc);
+      
+  });
+    $('#myModal').modal({show:true})
+});
+
 
   Button.prototype.toggle = function () {
     var changed = true
