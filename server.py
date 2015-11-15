@@ -132,6 +132,12 @@ def alreadyExists(user_id, collection):
 
 	#The lfow ist that i need to save this into mongodb. 
 
+
+@app.route("/graphics") 
+def graphic():
+	print "NEW"
+	return render_template("graphics.html")
+
 @app.route("/topic/newNode", methods=["POST"])
 def createTopicNode():
 	print ("IN CREATING NODE")
