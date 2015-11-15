@@ -200,11 +200,13 @@ function adjustPosition() {
 //createTopicByRequest
 //REQUIRES: a request by user has been made
 //ENSURES: create a new topic according to user's request
-function createTopicByRequest(topic_name,topic_description,parent_topic,rating) {
+function createTopicByRequest(topic_title,topic_description,parent_topic,rating) {
     var father = findTopic(parent_topic);
-    var currTopic = Topic(topic_name,topic_description,rating);
+    var currTopic = Topic(topic_title,topic_description,rating);
     currTopic.buildConnectionFrom(father);
+    topics.push(currTopic);
     adjustPosition();
+    redrawAll();
 };
 
 //redrawAll [View]
@@ -311,8 +313,7 @@ function test() {
     topics[8].buildConnectionFrom(topics[1]);
     topics[9].buildConnectionFrom(topics[1]);
     topics[10].buildConnectionFrom(topics[1]);
-    adjustPosition();
-    redrawAll();
+    createTopicByRequest("11","...","2",5);
     console.log(topics[1].centerX,topics[1].centerY);
 }
 test();
