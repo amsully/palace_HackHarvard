@@ -11,20 +11,20 @@ var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
 //****************************** Variables ******************************
-//selectedShape: indicating the shape of next Topic to be created
-var selectedShape = "Rectangle";
-
 //clickedTopic: to be replaced by clicking "+" "-" later
 var clickedTopic;
 
 //defaultX: default Size and outline color when create new topic
 var defaultCenterX = 25;
 var defaultCenterY = 25; 
-var defaultWidth = 50;
-var defaultHeight = 50;
+var defaultFontSize = 15;
+var defaultContentSize = 10;
 var defaultFont = "15px Arial";
+var defaultButtonRadius = 10;
 //color
 var defaultStroke = "black";
+var defaultTopicShape = "Circle";
+var defaultContentShape = "Rectangle";
 
 //default color for connection lines
 var connectionStroke = "green";
@@ -33,25 +33,141 @@ var connectionStroke = "green";
 var topics = [];
 
 //****************************** Classes ******************************
+//Content (Class)
+//REQUIRES: a new content has been added to a existing topic
+//ENSURES: create an instance of class content
+function Content(topic,content) {
+    var c = {};
+    c.fontSize = defaultContentSize;
+    c.font = defaultFont;
 
-//Topic (Class) [Model]
+    c.centerX = defaultCenterX;
+    c.centerY = defaultCenterY;
+
+    c.width = c.fontSize*content.length;
+    c.height = c.fontSize*1.5;
+
+    c.content = content;
+    c.topic = topic;
+
+    c.stroke = defaultStroke;
+
+    c.drawItself = function() {
+        var leftX,leftY;
+        leftX = c.centerX-c.width/2;
+        leftY = c.centerY-c.height/2;
+        //cover connection lines
+        ctx.fillStyle = "white";
+        ctx.fillRect(leftX,leftY,c.width,c.height);
+
+        //draw outline 
+        ctx.strokeStyle = c.stroke;
+        ctx.strokeRect(leftX,leftY,c.width,c.height);
+
+        //display text
+        ctx.font = c.font;
+        ctx.textAlign = "center";
+        ctx.fillStyle = c.stroke;
+        ctx.fillText(c.content,c.centerX,c.centerY+c.fontSize/3);
+    }
+
+    c.drawConnectionLines = function() {
+        ctx.strokeStyle = connectionStroke;
+        ctx.beginPath();
+        ctx.moveTo(c.topic.centerX,c.topic.centerY);
+        ctx.lineTo(c.centerX,c.centerY);
+        ctx.stroke();
+    }
+
+    c.reposition = function(newCenterX,newCenterY) {
+        c.centerX = newCenterX;
+        c.centerY = newCenterY;
+    }
+    return c;
+};
+
+//ContentButton (Class) 
+//REQUIRES: a new topic has been created
+//ENSURES: generates a plus/expand if active 
+//                   a minus/constrain button if deactive
+function ContentButton(x,y) {
+    var b = {};
+    b.active = false;
+    b.centerX = x;
+    b.centerY = y;
+    b.radius = defaultButtonRadius;
+
+    b.fontSize = defaultFontSize;
+    b.font = defaultFont;
+    b.stroke = defaultStroke;
+
+    b.draw = function() {
+        //cover connection lines
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(b.centerX,b.centerY,b.radius,0,2*Math.PI);
+        ctx.fill();
+
+        //draw outline 
+        ctx.strokeStyle = b.stroke;
+        ctx.beginPath();
+        ctx.arc(b.centerX,b.centerY,b.radius,0,2*Math.PI);
+        ctx.stroke();
+
+        var tag;
+        ctx.strokeStyle = b.stroke;
+        if (b.active == false) {
+            //expand 
+            tag = "+";
+        } else {
+            tag = "-";
+        }
+
+        ctx.font = b.font;
+        ctx.textAlign = "center";
+        ctx.fillStyle = b.stroke;
+        ctx.fillText(tag,b.centerX,b.centerY+b.fontSize/3);
+    };
+
+    b.isClickedOn = function(x,y) {
+        if (Math.pow((Math.pow((x-b.centerX),2)+
+                      Math.pow((y-b.centerY),2)),0.5)<=b.radius) {
+            return true;
+        } else {
+            return false;
+        };
+    }
+
+    b.turnOnOrOff = function() {
+        b.active = !b.active;
+    }
+
+    b.reposition = function(x,y) {
+        b.centerX = x;
+        b.centerY = y;
+    };
+
+    return b;
+};
+
+
+//Topic (Class) [Model] 
 //REQUIRES: either initializing the rootTopic or a request has been made
 //ENSURES: create an instance of class Topic
-function Topic(title,content,rating) {
+function Topic(title,rating) {
     var t = {};
 
     //-------------------- attributes --------------------
     t.centerX = defaultCenterX;
     t.centerY = defaultCenterY;
-    t.width = defaultWidth;
-    t.height = defaultHeight;
-    t.leftX = t.centerX-t.width/2;
-    t.leftY = t.centerY-t.height/2;
+    t.radius = defaultFontSize*title.length;
 
     t.title = title;
-    t.content = content;
+    t.content = [];
     t.rating = rating;
-    t.shape = selectedShape;
+
+    t.shape = defaultTopicShape;
+    t.fontSize = defaultFontSize;
     t.font = defaultFont;
     //color
     t.stroke = defaultStroke;
@@ -61,26 +177,34 @@ function Topic(title,content,rating) {
     t.fathers = [];
     t.sons = [];
 
+    t.button = ContentButton(t.centerX+t.radius,t.centerY-t.radius);
+
     //-------------------- methods --------------------
     //drawing 
     t.drawItself = function() {
-        if (t.shape=="Rectangle") {
+        if (t.shape=="Circle") {
             //cover connection lines
             ctx.fillStyle = "white";
-            ctx.fillRect(t.leftX,t.leftY,t.width,t.height);
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+            ctx.fill();
 
             //draw outline 
             ctx.strokeStyle = t.stroke;
-            ctx.strokeRect(t.leftX,t.leftY,t.width,t.height);
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+            ctx.stroke();
 
             //display text
             ctx.font = t.font;
             ctx.textAlign = "center";
             ctx.fillStyle = t.stroke;
-            ctx.fillText(t.title,t.centerX,t.centerY);
+            ctx.fillText(t.title,t.centerX,t.centerY+t.fontSize/3);
 
+            if (t.title!="Palace") {
+                t.button.draw();
+            };
         };
-        return 42;
     };
     t.drawConnectionLines = function() {
         ctx.strokeStyle = connectionStroke;
@@ -96,8 +220,8 @@ function Topic(title,content,rating) {
     t.isClickedOn = function(x,y) {
         if (t.shape=="Rectangle") {
             var x0,y0,x1,y1;
-            x0,y0 = t.leftX,t.leftY;
-            x1,y1 = (x0+t.width),(y0+t.height);
+            x0,y0 = t.centerX-t.radius,t.t.centerY-t.radius;
+            x1,y1 = (x0+t.radius*2),(y0+t.radius*2);
             if ((x0<=x) && (x<=x1) && (y0<=y) && (y<=y1)) {
                 return true;
             } else {
@@ -106,9 +230,17 @@ function Topic(title,content,rating) {
         };
         return 42;
     };
+    t.isConnectedTo = function(topic) {
+        for (var i=0;i<t.sons.length;i++) {
+            if (topic==t.sons[i]) {
+                return true;
+            };
+        };
+        return false;
+    };
 
     //modification
-    //connectTo
+    //buildConnectionFrom
     //REQUIRES: father topic exists
     //ENSURES: build connection between father and current topic
     //         double ways connection
@@ -119,10 +251,47 @@ function Topic(title,content,rating) {
     t.reposition = function(newCenterX,newCenterY) {
         t.centerX = newCenterX;
         t.centerY = newCenterY;
-        t.leftX = newCenterX-t.width/2;
-        t.leftY = newCenterY-t.height/2;
-    }
 
+        var angle = Math.PI/4;
+        var radius = t.radius+t.button.radius;
+        var dx = radius*Math.cos(angle);
+        var dy = radius*Math.sin(angle);
+        t.button.reposition(newCenterX+dx,newCenterY-dy);
+    };
+    t.adjustContentPosition = function() {
+        var dx,dy,dAngle;
+        var father = t.fathers[0];
+        var startAngle,angle;
+        var radius = t.radius*3;
+        dx = father.centerX-t.centerX;
+        dy = -father.centerY-(-t.centerY);
+        startAngle = Math.atan(dy/dx);
+        if (dx==0) {
+            if (dy>0) {
+                startAngle = Math.PI/2;
+            } else {
+                startAngle = -Math.PI/2;
+            }
+        } else {
+            //canvas y-axis is flipped
+            startAngle = Math.atan(dy/dx);
+            if (dx<0) {
+                //II,IV Quadrant 
+                startAngle = startAngle+Math.PI;
+            }
+        };
+        dAngle = 2*Math.PI/(1+t.content.length);
+        for (var i=0;i<t.content.length;i++) {
+            angle = startAngle-dAngle*(i+1);
+            dx = Math.cos(angle)*radius;
+            dy = Math.sin(angle)*radius;
+            t.content[i].reposition(t.centerX+dx,t.centerY-dy);
+        }
+    };
+    t.addContent = function(content) {
+        t.content.push(Content(t,content));
+        t.adjustContentPosition();
+    };
     return t;
 };
 topics.push(Topic("Palace","Start",10));
@@ -146,65 +315,90 @@ function findTopic(targetTitle) {
 //ENSURES: Adjust Position for all topics
 function adjustPosition() {
     //reposition the rootTopic
-    function adjustSonTopicPosition(father,currTopic) {
+    function adjustSonTopicPosition(father,currTopic,divisor) {
         //the number of total branches going in/out from currTopic
-        var r = 100;
+        var radius = canvas.width/divisor;
         var divisor = 1+currTopic.sons.length;
         var dAngle = 2*Math.PI/divisor;
+        var dx,dy;
         var angle;
         var startAngle;
-        if (father.centerX==currTopic.centerX) {
-            if (father.centerY<=currTopic.centerY) {
+        dx = father.centerX-currTopic.centerX;
+        dy = -father.centerY-(-currTopic.centerY);
+        if (dx==0) {
+            if (dy>0) {
                 startAngle = Math.PI/2;
             } else {
                 startAngle = -Math.PI/2;
             }
-        } else if (father.centerY==currTopic.centerY) {
-            if (father.centerX>=currTopic.centerX) {
-                startAngle = 0;
-            } else {
-                startAngle = Math.PI;
-            }
         } else {
-            startAngle = Math.atan((father.centerY-currTopic.centerY)/
-                                   (father.centerX-currTopic.centerX));
-        }
-        console.log(currTopic.title,startAngle);
-        console.log(Math.atan(Math.PI/2));
+            //canvas y-axis is flipped
+            startAngle = Math.atan(dy/dx);
+            if (dx<0) {
+                //II,IV Quadrant 
+                startAngle = startAngle+Math.PI;
+            }
+        };
         for (var i=0;i<currTopic.sons.length;i++) {
-            angle = -startAngle + dAngle*(i+1);
-            dx = Math.cos(angle)*r;
-            dy = Math.sin(angle)*r;
+            angle = startAngle - dAngle*(i+1);
+            
+            dx = Math.cos(angle)*radius;
+            dy = Math.sin(angle)*radius;
             currTopic.sons[i].reposition(currTopic.centerX+dx,
-                                         currTopic.centerY+dy);
-            adjustSonTopicPosition(currTopic,currTopic.sons[i]);
+                                         currTopic.centerY-dy);
+            currTopic.sons[i].adjustContentPosition();
+            adjustSonTopicPosition(currTopic,currTopic.sons[i],divisor+1);
         }
 
     }
-    var r = 200;
+    var radius = canvas.width/2;
     var dAngle;
     if (topics[0].sons.length>0) {
         dAngle = 2*Math.PI/topics[0].sons.length;
     }
     var angle;
     for (var i=0;i<topics[0].sons.length;i++) {
-        angle = dAngle*i;
-        dx = Math.cos(angle)*r;
-        dy = Math.sin(angle)*r;
+        angle = -dAngle*i;
+        dx = Math.cos(angle)*radius;
+        dy = Math.sin(angle)*radius;
         topics[0].sons[i].reposition(topics[0].centerX+dx,
-                                     topics[0].centerY+dy);
-        adjustSonTopicPosition(topics[0],topics[0].sons[i]);
+                                     topics[0].centerY-dy);
+        topics[0].sons[i].adjustContentPosition();
+        adjustSonTopicPosition(topics[0],topics[0].sons[i],4);
     };
 };
+
+function titleExists(title) {
+    for (var i=0;i<topics.length;i++) {
+        if (topics[i].tilte==title) {
+            return true;
+        };
+    };
+    return false;
+}
 
 //createTopicByRequest
 //REQUIRES: a request by user has been made
 //ENSURES: create a new topic according to user's request
 function createTopicByRequest(topic_title,topic_description,parent_topic,rating) {
     var father = findTopic(parent_topic);
-    var currTopic = Topic(topic_title,topic_description,rating);
-    currTopic.buildConnectionFrom(father);
-    topics.push(currTopic);
+    if (titleExists(topic_title)) {
+        var currTopic = findTopic(topic_title);
+        if (father.isConnectedTo(currTopic)) {
+            //adding content
+            currTopic.addContent(topic_description);
+        } else {
+            //or adding connection
+            currTopic.buildConnectionFrom(father);
+        }
+        //or both - pretend this case doesn't exist yet
+    } else {
+        //adding new Topic
+        var newTopic = Topic(topic_title,rating);
+        newTopic.buildConnectionFrom(father);
+        newTopic.addContent(topic_description);
+        topics.push(newTopic);
+    };
     adjustPosition();
     redrawAll();
 };
@@ -218,10 +412,20 @@ function redrawAll() {
     //First time draw the connection lines
     for (var i=0;i<topics.length;i++) {
         topics[i].drawConnectionLines();
+        if (topics[i].button.active == true) {
+            for (var j=0;j<topics[i].content.length;j++) {
+                topics[i].content[j].drawConnectionLines();
+            };
+        };
     };
     //Second time draw the topic to cover the extra portion of lines
     for (var i=0;i<topics.length;i++) {
         topics[i].drawItself();
+        if (topics[i].button.active == true) {
+            for (var j=0;j<topics[i].content.length;j++) {
+                topics[i].content[j].drawItself();
+            };
+        };
     };
 };
 //onClick 
@@ -230,6 +434,12 @@ function redrawAll() {
 function onClick(event) {
     var x = event.pageX - canvas.offsetLeft;  
     var y = event.pageY - canvas.offsetTop;
+    for (var i=1;i<topics.length;i++) {
+        if (topics[i].button.isClickedOn(x,y)==true) {
+            topics[i].button.turnOnOrOff();
+            return;
+        }
+    }
     
     //start to request user input
 //******************************************************************************to be finished
@@ -242,6 +452,7 @@ function moveScreen(dx,dy) {
         topics[i].reposition(topics[i].centerX+dx,
                              topics[i].centerY+dy);
     }
+    adjustPosition();
 }
 
 //onKeyDown
@@ -293,16 +504,16 @@ run();
 //REQUIRES: None
 //ENSURES: tba
 function test() {
-    topics.push(Topic("1","...",5));
-    topics.push(Topic("2","...",5));
-    topics.push(Topic("3","...",5));
-    topics.push(Topic("4","...",5));
-    topics.push(Topic("5","...",5));
-    topics.push(Topic("6","...",5));
-    topics.push(Topic("7","...",5));
-    topics.push(Topic("8","...",5));
-    topics.push(Topic("9","...",5));
-    topics.push(Topic("10","...",5));
+    topics.push(Topic("1",5));
+    topics.push(Topic("2",5));
+    topics.push(Topic("3",5));
+    topics.push(Topic("4",5));
+    topics.push(Topic("5",5));
+    topics.push(Topic("6",5));
+    topics.push(Topic("7",5));
+    topics.push(Topic("8",5));
+    topics.push(Topic("9",5));
+    topics.push(Topic("10",5));
     topics[1].buildConnectionFrom(topics[0]);
     topics[2].buildConnectionFrom(topics[0]);
     topics[3].buildConnectionFrom(topics[0]);
@@ -314,7 +525,6 @@ function test() {
     topics[9].buildConnectionFrom(topics[1]);
     topics[10].buildConnectionFrom(topics[1]);
     createTopicByRequest("11","...","2",5);
-    console.log(topics[1].centerX,topics[1].centerY);
 }
 test();
 </script>
