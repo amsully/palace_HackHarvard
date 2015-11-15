@@ -16,6 +16,7 @@
     <!-- Custom Fonts -->
     <link href="http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename ='css/bootstrap.css') }}" media="all" />
+        <script type="text/javascript" src="../js/bootstrap.js"></script>
 
 
   
@@ -25,6 +26,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename ='css/landing-page.css') }}" media="all" />
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename ='css/landing-page.css') }}" media="all" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -207,202 +209,524 @@
     		</div> <!-- /.col-xs-12 -->
     </div> <!-- /.container -->
 </div>
+<!-- Button trigger modal -->
 
 
+<!-- Modal -->
 
 
 <canvas id="myCanvas" width="300" height="768"
         style="border:0px solid #000000;">
 </canvas>
+<script>
+$('#identifier').modal(options)
+</script>
 
-<script> 
 
-
-// <html>
-
-// <canvas id="myCanvas" width="1366" height="768"
-//         style="border:0px solid #000000;">
-// </canvas>
-// <script>
-
+<script>
+//****************************** Set Up ******************************
+//Setting up the canvas
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
-
-var intervalId;
-var timerDelay = 100;
-var rectangles = [];
-var clicked = undefined;
-var dragged = undefined;
-var quit = false;
-
-function Rectangle(x,y) {
-
-    // 
-    // r.title = 
-
-
-    var r = {};
-    r.x = x-25;
-    r.y = y-25;
-    r.cx = x;
-    r.cy = y;
-    r.w = 50;
-    r.h = 50;
-    r.output = [];
-    r.input = [];
-    r.fill = "black";
-    r.drawConnection = function() { 
-        ctx.strokeStyle = "red";
-        for (var i=0;i<r.output.length;i++) {
-            ctx.beginPath();
-            ctx.moveTo(r.cx,r.cy);
-            ctx.lineTo(r.output[i].cx,r.output[i].cy);
-            ctx.stroke();
-        }   
+//****************************** Variables ******************************
+//clickedTopic: to be replaced by clicking "+" "-" later
+var clickedTopic;
+//defaultX: default Size and outline color when create new topic
+var defaultCenterX = 25;
+var defaultCenterY = 25; 
+var defaultButtonRadius = 10;
+var defaultContentSize = 10;
+//font
+var defaultFontSize = 25;
+var defaultFont = "bold 25px Arial";
+var defaultContentFontSize = 20;
+var defaultContentFont = "20px Arial";
+//color
+var defaultFontColor = "rgb(50,205,50)";//lime green
+var defaultButtonColor = "rgb(250,128,114)";//salmon
+var defaultContentColor = "rgb(173,255,47)";//green yellow
+var defaultStroke = "rgb(255,215,0)";//gold
+var defaultFill = "rgb(255,255,0)";//yellow
+//default color for connection lines
+var connectionStroke = "green";
+var contentStroke = "blue";
+//topics;
+var topics = [];
+//****************************** Classes ******************************
+//Content (Class)
+//REQUIRES: a new content has been added to a existing topic
+//ENSURES: create an instance of class content
+function Content(topic,content) {
+    var c = {};
+    c.fontSize = defaultContentFontSize;
+    c.font = defaultContentFont;
+    c.centerX = defaultCenterX;
+    c.centerY = defaultCenterY;
+    c.width = c.fontSize*content.length;
+    c.height = c.fontSize*1.5;
+    c.content = content;
+    c.topic = topic;
+    c.fill = defaultContentColor;
+    c.stroke = contentStroke;
+    c.drawItself = function() {
+        var leftX,leftY;
+        leftX = c.centerX-c.width/2;
+        leftY = c.centerY-c.height/2;
+        //cover connection lines
+        ctx.fillStyle = "rgb(229,255,204)";
+        ctx.fillRect(leftX-10,leftY-10,c.width+20,c.height+20);
+        ctx.fillStyle = "rgb(204,255,104)";
+        ctx.fillRect(leftX-5,leftY-5,c.width+10,c.height+10);
+        ctx.fillStyle = c.fill;
+        ctx.fillRect(leftX,leftY,c.width,c.height);
+        //display text
+        ctx.font = c.font;
+        ctx.textAlign = "center";
+        ctx.fillStyle = c.stroke;
+        ctx.fillText(c.content,c.centerX,c.centerY+c.fontSize/3);
     }
-    r.draw = function() {
+    c.drawConnectionLines = function() {
+        ctx.strokeStyle = contentStroke;
+        ctx.beginPath();
+        ctx.moveTo(c.topic.centerX,c.topic.centerY);
+        ctx.lineTo(c.centerX,c.centerY);
+        ctx.stroke();
+    }
+    c.reposition = function(newCenterX,newCenterY) {
+        c.centerX = newCenterX;
+        c.centerY = newCenterY;
+    }
+    return c;
+};
+//ContentButton (Class) 
+//REQUIRES: a new topic has been created
+//ENSURES: generates a plus/expand if active 
+//                   a minus/constrain button if deactive
+function ContentButton(x,y) {
+    var b = {};
+    b.active = false;
+    b.centerX = x;
+    b.centerY = y;
+    b.radius = defaultButtonRadius;
+    b.fontSize = defaultFontSize;
+    b.font = defaultFont;
+    b.stroke = defaultButtonColor;
+    b.draw = function() {
+        //cover connection lines
         ctx.fillStyle = "white";
-        ctx.fillRect(r.x,r.y,r.w,r.h);
-        ctx.strokeStyle = r.fill;
-        ctx.strokeRect(r.x,r.y,r.w,r.h);
-    }
-    r.clicked = function(clickX,clickY) {
-        if ((r.x<=clickX) && (clickX<=(r.x+r.w)) && 
-            (r.y<=clickY) && (clickY<=(r.y+r.h))) {
+        ctx.beginPath();
+        ctx.arc(b.centerX,b.centerY,b.radius,0,2*Math.PI);
+        ctx.fill();
+        //draw outline 
+        ctx.strokeStyle = b.stroke;
+        ctx.beginPath();
+        ctx.arc(b.centerX,b.centerY,b.radius,0,2*Math.PI);
+        ctx.stroke();
+        var tag;
+        ctx.strokeStyle = b.stroke;
+        if (b.active == false) {
+            //expand 
+            tag = "+";
+        } else {
+            tag = "-";
+        }
+        ctx.font = b.font;
+        ctx.textAlign = "center";
+        ctx.fillStyle = b.stroke;
+        ctx.fillText(tag,b.centerX,b.centerY+b.fontSize/3);
+    };
+    b.isClickedOn = function(x,y) {
+        if (Math.pow((Math.pow((x-b.centerX),2)+
+                      Math.pow((y-b.centerY),2)),0.5)<=b.radius) {
             return true;
-        }
-        return false;
-        }
-    r.connectTo = function(other) {
-        r.output.push(other);
-        other.input.push(r);
+        } else {
+            return false;
+        };
     }
-    return r;
+    b.turnOnOrOff = function() {
+        b.active = !b.active;
+    }
+    b.reposition = function(x,y) {
+        b.centerX = x;
+        b.centerY = y;
+    };
+    return b;
+};
+//Topic (Class) [Model] 
+//REQUIRES: either initializing the rootTopic or a request has been made
+//ENSURES: create an instance of class Topic
+function Topic(title,rating) {
+    var t = {};
+    //-------------------- attributes --------------------
+    t.centerX = defaultCenterX;
+    t.centerY = defaultCenterY;
+    t.radius = defaultFontSize*title.length*3/4;
+    t.title = title;
+    t.content = [];
+    t.rating = rating;
+    t.fontSize = defaultFontSize;
+    t.font = defaultFont;
+    //color
+    t.fontColor = defaultFontColor;
+    t.stroke = defaultStroke;
+    t.fill = defaultFill;
+    //topics connected to the current one
+    //both fathers and sons can be multiple
+    t.fathers = [];
+    t.sons = [];
+    t.button = ContentButton(t.centerX+t.radius,t.centerY-t.radius);
+    t.hovered = false;
+    //-------------------- methods --------------------
+    //drawing 
+    t.drawItself = function() {
+        if (t.hovered) {
+            //cover connection lines
+            ctx.fillStyle = "rgb(173,255,47)";//green yellow
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.fill();
+            //draw outline 
+            ctx.strokeStyle = "rgb(50,205,50)";//lime green
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.stroke();
+            //display text
+            ctx.font = "bold 40px Arial";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgb(240,255,255)";//azure
+            ctx.fillText(t.title,t.centerX,t.centerY+40/3);
+        } else {
+            if (t.title =="Palace") {
+                ctx.fillStyle = "rgb(240,255,255)";//azure;
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+40,0,2*Math.PI);
+                ctx.fill();
+                ctx.fillStyle = "rgb(135,206,250)";//light sky blue
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.fill();
+            } else {
+                //cover connection lines
+                ctx.fillStyle = "rgb(255,255,224)";//light yellow
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.fill();
+                ctx.fillStyle = "rgb(255,255,150)";
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius+10,0,2*Math.PI);
+                ctx.fill();
+                t.button.draw();
+                //draw outline 
+                ctx.strokeStyle = t.stroke;
+                ctx.beginPath();
+                ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+                ctx.stroke();
+            };
+            ctx.fillStyle = t.fill;
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
+            ctx.fill();
+            //display text
+            ctx.font = t.font;
+            ctx.textAlign = "center";
+            ctx.fillStyle = t.fontColor;
+            ctx.fillText(t.title,t.centerX,t.centerY+t.fontSize/3);
+            
+        }
+    };
+    t.drawConnectionLines = function() {
+        ctx.strokeStyle = connectionStroke;
+        for (var i=0;i<t.sons.length;i++) {
+            ctx.beginPath();
+            ctx.moveTo(t.centerX,t.centerY);
+            ctx.lineTo(t.sons[i].centerX,t.sons[i].centerY);
+            ctx.stroke();
+        };
+    };
+    //checking
+    t.isHoveredOn = function(x,y) {
+        if (Math.pow((Math.pow((x-t.centerX),2)+
+                      Math.pow((y-t.centerY),2)),0.5)<=t.radius) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+    t.isConnectedTo = function(topic) {
+        for (var i=0;i<t.sons.length;i++) {
+            if (topic==t.sons[i]) {
+                return true;
+            };
+        };
+        return false;
+    };
+    //modification
+    //buildConnectionFrom
+    //REQUIRES: father topic exists
+    //ENSURES: build connection between father and current topic
+    //         double ways connection
+    t.buildConnectionFrom = function(father) {
+        father.sons.push(t);
+        t.fathers.push(father);
+    };
+    t.reposition = function(newCenterX,newCenterY) {
+        t.centerX = newCenterX;
+        t.centerY = newCenterY;
+        var angle = Math.PI/4;
+        var radius = t.radius+t.button.radius;
+        var dx = radius*Math.cos(angle);
+        var dy = radius*Math.sin(angle);
+        t.button.reposition(newCenterX+dx,newCenterY-dy);
+    };
+    t.adjustContentPosition = function() {
+        var dx,dy,dAngle;
+        var father = t.fathers[0];
+        var startAngle,angle;
+        var radius = t.radius*3;
+        dx = father.centerX-t.centerX;
+        dy = -father.centerY-(-t.centerY);
+        startAngle = Math.atan(dy/dx);
+        if (dx==0) {
+            if (dy>0) {
+                startAngle = Math.PI/2;
+            } else {
+                startAngle = -Math.PI/2;
+            }
+        } else {
+            //canvas y-axis is flipped
+            startAngle = Math.atan(dy/dx);
+            if (dx<0) {
+                //II,IV Quadrant 
+                startAngle = startAngle+Math.PI;
+            }
+        };
+        dAngle = 2*Math.PI/(1+t.content.length);
+        for (var i=0;i<t.content.length;i++) {
+            angle = startAngle-dAngle*(i+1);
+            dx = Math.cos(angle)*radius;
+            dy = Math.sin(angle)*radius;
+            t.content[i].reposition(t.centerX+dx,t.centerY-dy);
+        }
+    };
+    t.addContent = function(content) {
+        t.content.push(Content(t,content));
+        t.adjustContentPosition();
+    };
+    return t;
+};
+topics.push(Topic("Palace","Start",10));
+topics[0].reposition(canvas.width/2,canvas.height/2);
+topics[0].fill = "rgb(0,191,255)";//deep sky bluee
+topics[0].stroke = "rgb(0,0,128)";//navy
+topics[0].font = "bolder 55px Arial";
+topics[0].fontColor = "rgb(240,255,255)";//azure
+topics[0].fontSize = 55;
+//****************************** Functions ******************************
+//findTopic (helper)
+//REQUIRES: topic exists
+//ENSURES: return the topic object
+function findTopic(targetTitle) {
+    for (var i=0;i<topics.length;i++) {
+        if (topics[i].title == targetTitle) {
+            return topics[i];
+        }
+    };
+};
+//adjustPosition 
+//REQUIRES: A new Topic has been made
+//ENSURES: Adjust Position for all topics
+function adjustPosition() {
+    //reposition the rootTopic
+    function adjustSonTopicPosition(father,currTopic,divisor) {
+        //the number of total branches going in/out from currTopic
+        var radius = canvas.width/divisor;
+        var divisor = 1+currTopic.sons.length;
+        var dAngle = 2*Math.PI/divisor;
+        var dx,dy;
+        var angle;
+        var startAngle;
+        dx = father.centerX-currTopic.centerX;
+        dy = -father.centerY-(-currTopic.centerY);
+        if (dx==0) {
+            if (dy>0) {
+                startAngle = Math.PI/2;
+            } else {
+                startAngle = -Math.PI/2;
+            }
+        } else {
+            //canvas y-axis is flipped
+            startAngle = Math.atan(dy/dx);
+            if (dx<0) {
+                //II,IV Quadrant 
+                startAngle = startAngle+Math.PI;
+            }
+        };
+        for (var i=0;i<currTopic.sons.length;i++) {
+            angle = startAngle - dAngle*(i+1);
+            
+            dx = Math.cos(angle)*radius;
+            dy = Math.sin(angle)*radius;
+            currTopic.sons[i].reposition(currTopic.centerX+dx,
+                                         currTopic.centerY-dy);
+            currTopic.sons[i].adjustContentPosition();
+            adjustSonTopicPosition(currTopic,currTopic.sons[i],divisor+1);
+        }
+    }
+    var radius = canvas.width;
+    var dAngle;
+    if (topics[0].sons.length>0) {
+        dAngle = 2*Math.PI/topics[0].sons.length;
+    }
+    var angle;
+    for (var i=0;i<topics[0].sons.length;i++) {
+        angle = -dAngle*i;
+        dx = Math.cos(angle)*radius;
+        dy = Math.sin(angle)*radius;
+        topics[0].sons[i].reposition(topics[0].centerX+dx,
+                                     topics[0].centerY-dy);
+        topics[0].sons[i].adjustContentPosition();
+        adjustSonTopicPosition(topics[0],topics[0].sons[i],2);
+    };
+};
+function titleExists(title) {
+    for (var i=0;i<topics.length;i++) {
+        if (topics[i].tilte==title) {
+            return true;
+        };
+    };
+    return false;
 }
-
-
+//createTopicByRequest
+//REQUIRES: a request by user has been made
+//ENSURES: create a new topic according to user's request
+function createTopicByRequest(topic_title,topic_description,parent_topic,rating) {
+    var father = findTopic(parent_topic);
+    if (titleExists(topic_title)) {
+        var currTopic = findTopic(topic_title);
+        if (father.isConnectedTo(currTopic)) {
+            //adding content
+            currTopic.addContent(topic_description);
+        } else {
+            //or adding connection
+            currTopic.buildConnectionFrom(father);
+        }
+        //or both - pretend this case doesn't exist yet
+    } else {
+        //adding new Topic
+        var newTopic = Topic(topic_title,rating);
+        newTopic.buildConnectionFrom(father);
+        newTopic.addContent(topic_description);
+        topics.push(newTopic);
+    };
+    adjustPosition();
+    redrawAll();
+};
+//redrawAll [View]
+//REQUIRES: None
+//ENSURES: the canvas is redrawed
 function redrawAll() {
     // erase everything -- not efficient, but simple!
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (var i=0;i<rectangles.length;i++) {
-        rectangles[i].drawConnection();
-    }
-    for (var i=0;i<rectangles.length;i++) {
-        rectangles[i].draw();
-    }
-}
-
-function onTimer() {
-    if (quit) return;
-    redrawAll();
-}
-
-function onKeyDown(event) {
-    if (quit) return;
-    var qCode = 81;
-    if (event.keyCode === qCode) {
-        clearInterval(intervalId);
-        // ctx.clearRect(0, 0, 400, 400);
-        ctx.fillStyle = "rgba(128,128,128,0.75)";
-        ctx.fillRect(0, 0, 400, 400);
-        quit = true;
-    }
-}
-
-function onKeyDownWrapper(event) {
-    onKeyDown(event);
-    redrawAll();
-}
-
+    //First time draw the connection lines
+    for (var i=0;i<topics.length;i++) {
+        topics[i].drawConnectionLines();
+        if (topics[i].button.active == true) {
+            for (var j=0;j<topics[i].content.length;j++) {
+                topics[i].content[j].drawConnectionLines();
+            };
+        };
+    };
+    //Second time draw the topic to cover the extra portion of lines
+    for (var i=0;i<topics.length;i++) {
+        topics[i].drawItself();
+        if (topics[i].button.active == true) {
+            for (var j=0;j<topics[i].content.length;j++) {
+                topics[i].content[j].drawItself();
+            };
+        };
+    };
+};
+//onClick 
+//REQUIRES: event mouse clicked happens
+//ENSURES: 
 function onClick(event) {
     var x = event.pageX - canvas.offsetLeft;  
     var y = event.pageY - canvas.offsetTop;
-    for (var i=0;i<rectangles.length;i++) {
-        if (rectangles[i].clicked(x,y)==true) {
-            if (clicked == undefined) {
-                clicked = rectangles[i];
-            } else if (clicked!=rectangles[i]) {
-                clicked.connectTo(rectangles[i]);
-                clicked = undefined;
-            }
+    for (var i=1;i<topics.length;i++) {
+        if (topics[i].button.isClickedOn(x,y)==true) {
+            topics[i].button.turnOnOrOff();
             return;
         }
     }
-    rectangles.push(Rectangle(x,y));
+    
+    //start to request user input
+//******************************************************************************to be finished
 }
-
-function onClickWrapper(event) {
-    onClick(event);
-    redrawAll();
+//moveScreen
+//REQUIRES: arrow kye has been pressed
+//ENSURES: adjust the location for all topics correspondingly
+function moveScreen(dx,dy) {
+    for (var i=0;i<topics.length;i++) {
+        topics[i].reposition(topics[i].centerX+dx,
+                             topics[i].centerY+dy);
+    }
+    adjustPosition();
 }
-
-function onMouseDown(event) {
+//onKeyDown
+//REQUIRES: event key press happens
+//ENSURES: adjust graphics according to the key pressed
+function onKeyDown(event) {
+    var upArrow = 38;
+    var downArrow = 40;
+    var leftArrow = 37;
+    var rigthArrow = 39;
+    var d = 200;
+    if (event.keyCode == upArrow) {
+        moveScreen(0,d);
+    } else if (event.keyCode == downArrow) {
+        moveScreen(0,-d);
+    } else if (event.keyCode == rigthArrow) {
+        moveScreen(-d,0);
+    } else if (event.keyCode == leftArrow) {
+        moveScreen(d,0);
+    }
+}
+function onMouseMove(event) {
     var x = event.pageX - canvas.offsetLeft;  
     var y = event.pageY - canvas.offsetTop;
-    for (var i=0;i<rectangles.length;i++) {
-        if (rectangles[i].clicked(x,y)==true) {
-            if (dragged == undefined) {
-                dragged = rectangles[i];
-                return;
-            }
+    for (var i=1;i<topics.length;i++) {
+        if (topics[i].isHoveredOn(x,y)==true) {
+            topics[i].hovered = true;
+        } else {
+            topics[i].hovered = false;
         }
     }
 }
-
-function onMouseDownWrapper(event) {
-    onMouseDown(event);
-    redrawAll();
-}
-
-function onMouseMove(event) {
-    if (dragged!=undefined) {
-        var x = event.pageX - canvas.offsetLeft;  
-        var y = event.pageY - canvas.offsetTop;
-        dragged.cx = x;
-        dragged.cy = y;
-        dragged.x = x-dragged.w/2;
-        dragged.y = y-dragged.h/2;
-        return;
-    }
-}
-
+//Event Based Animation Wrappers [Controller]
+//After processing an event, redraw the canvas
+function onClickWrapper(event) {
+    onClick(event);
+    redrawAll();};
+function onKeyDownWrapper(event) {
+    onKeyDown(event);
+    redrawAll();};
 function onMouseMoveWrapper(event) {
     onMouseMove(event);
-    redrawAll();
-}
-
-function onMouseUp(event) {
-    if (dragged!=undefined) {
-        var x = event.pageX - canvas.offsetLeft;  
-        var y = event.pageY - canvas.offsetTop;
-        dragged.cx = x;
-        dragged.cy = y;
-        dragged.x = x-dragged.w/2;
-        dragged.y = y-dragged.h/2;
-        dragged = undefined;
-        return;
-    }
-}
-
-function onMouseUpWrapper(event) {
-    onMouseUp(event);
-    redrawAll();
-}
-
+    redrawAll();};
+//run
+//REQUIRES: None
+//ENSURES: Driving function
 function run() {
-    canvas.addEventListener('keydown', onKeyDownWrapper, false);
     canvas.addEventListener('click', onClickWrapper, false);
-    canvas.addEventListener('mousedown',onMouseDownWrapper,false);
+    canvas.addEventListener('keydown',onKeyDownWrapper, false);
     canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
-    canvas.addEventListener('mouseup',onMouseUpWrapper,false);
     // make canvas focusable, then give it focus!
     canvas.setAttribute('tabindex','0');
     canvas.focus();
-    intervalId = setInterval(onTimer, timerDelay);
-}
-
+    redrawAll();
+};
 run();
- 
+
 
 
 
@@ -419,7 +743,7 @@ myApp.controller("newTopicCntlr", function($scope, $http){
 	console.log("The title gotten is "+	$scope.topic_title+" the description is "+ $scope.topic_description +" the parent topic is "+$scope.parent_topic  ); 
 
 
-	rectangles.push(Rectangle(25,25, $scope.topic_title, "Rectangle"));
+	createTopicByRequest($scope.topic_title, $scope.topic_description, $scope.parent_topic, $scope.rating);
 
 	$http({
 	method: "POST",
@@ -443,8 +767,44 @@ myApp.controller("newTopicCntlr", function($scope, $http){
 
 
 </script>
+<h2>Example of creating Modals with Twitter Bootstrap</h2>
 
-    <span class="highlight"><script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js"></script></span
+<!-- Button trigger modal -->
+<button class = "btn btn-primary btn-lg" data-toggle = "modal" data-target = "#myModal">
+   Launch demo modal
+</button>
+
+<!-- Modal -->
+<div class = "modal fade" id = "myModal" tabindex = "-1" role = "dialog" 
+   aria-labelledby = "myModalLabel" aria-hidden = "true">
+   
+   <div class = "modal-dialog">
+      <div class = "modal-content">
+         
+         <div class = "modal-header">
+            <button type = "button" class = "close" data-dismiss = "modal" aria-hidden = "true">
+                  &times;
+            </button>
+            
+            <h4 class = "modal-title" id = "myModalLabel">
+               This Modal title
+            </h4>
+         </div>
+         
+         <div class = "modal-body">
+           <center><iframe src="http://www.youtube.com/embed/dP15zlyra3c?html5=1" width="500" height="300"></iframe></center>
+         
+      </div><!-- /.modal-content -->
+   </div><!-- /.modal-dialog -->
+  
+</div><!-- /.modal -->
+    <span class="highlight"><script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular.min.js"></script></span>
+        <!-- jQuery -->
+    <script src= "{{ url_for('static', filename ='js/jquery.js') }}"></script>
+
+
+    <!-- Bootstrap Core JavaScript -->
+          <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>
 
 </html>
