@@ -17,17 +17,27 @@ var clickedTopic;
 //defaultX: default Size and outline color when create new topic
 var defaultCenterX = 25;
 var defaultCenterY = 25; 
-var defaultFontSize = 15;
-var defaultContentSize = 10;
-var defaultFont = "15px Arial";
 var defaultButtonRadius = 10;
+var defaultContentSize = 10;
+
+//font
+var defaultFontSize = 25;
+var defaultFont = "bold 25px Arial";
+var defaultContentFontSize = 20;
+var defaultContentFont = "20px Arial";
+
 //color
-var defaultStroke = "black";
+var defaultFontColor = "rgb(50,205,50)";//lime green
+var defaultButtonColor = "rgb(250,128,114)";//salmon
+var defaultStroke = "rgb(255,215,0)";//gold
+var defaultFill = "rgb(255,250,205)";//lemon chiffon
+
 var defaultTopicShape = "Circle";
 var defaultContentShape = "Rectangle";
 
 //default color for connection lines
 var connectionStroke = "green";
+var contentStroke = "blue";
 
 //topics;
 var topics = [];
@@ -38,8 +48,8 @@ var topics = [];
 //ENSURES: create an instance of class content
 function Content(topic,content) {
     var c = {};
-    c.fontSize = defaultContentSize;
-    c.font = defaultFont;
+    c.fontSize = defaultContentFontSize;
+    c.font = defaultContentFont;
 
     c.centerX = defaultCenterX;
     c.centerY = defaultCenterY;
@@ -50,7 +60,7 @@ function Content(topic,content) {
     c.content = content;
     c.topic = topic;
 
-    c.stroke = defaultStroke;
+    c.stroke = contentStroke;
 
     c.drawItself = function() {
         var leftX,leftY;
@@ -72,7 +82,7 @@ function Content(topic,content) {
     }
 
     c.drawConnectionLines = function() {
-        ctx.strokeStyle = connectionStroke;
+        ctx.strokeStyle = contentStroke;
         ctx.beginPath();
         ctx.moveTo(c.topic.centerX,c.topic.centerY);
         ctx.lineTo(c.centerX,c.centerY);
@@ -99,7 +109,7 @@ function ContentButton(x,y) {
 
     b.fontSize = defaultFontSize;
     b.font = defaultFont;
-    b.stroke = defaultStroke;
+    b.stroke = defaultButtonColor;
 
     b.draw = function() {
         //cover connection lines
@@ -160,7 +170,7 @@ function Topic(title,rating) {
     //-------------------- attributes --------------------
     t.centerX = defaultCenterX;
     t.centerY = defaultCenterY;
-    t.radius = defaultFontSize*title.length;
+    t.radius = defaultFontSize*title.length*3/4;
 
     t.title = title;
     t.content = [];
@@ -169,8 +179,11 @@ function Topic(title,rating) {
     t.shape = defaultTopicShape;
     t.fontSize = defaultFontSize;
     t.font = defaultFont;
+
     //color
+    t.fontColor = defaultFontColor;
     t.stroke = defaultStroke;
+    t.fill = defaultFill;
 
     //topics connected to the current one
     //both fathers and sons can be multiple
@@ -184,7 +197,7 @@ function Topic(title,rating) {
     t.drawItself = function() {
         if (t.shape=="Circle") {
             //cover connection lines
-            ctx.fillStyle = "white";
+            ctx.fillStyle = t.fill;
             ctx.beginPath();
             ctx.arc(t.centerX,t.centerY,t.radius,0,2*Math.PI);
             ctx.fill();
@@ -198,7 +211,7 @@ function Topic(title,rating) {
             //display text
             ctx.font = t.font;
             ctx.textAlign = "center";
-            ctx.fillStyle = t.stroke;
+            ctx.fillStyle = t.fontColor;
             ctx.fillText(t.title,t.centerX,t.centerY+t.fontSize/3);
 
             if (t.title!="Palace") {
@@ -296,6 +309,11 @@ function Topic(title,rating) {
 };
 topics.push(Topic("Palace","Start",10));
 topics[0].reposition(canvas.width/2,canvas.height/2);
+topics[0].fill = "rgb(0,191,255)";//deep sky bluee
+topics[0].stroke = "rgb(0,0,128)";//navy
+topics[0].font = "bolder 55px Arial";
+topics[0].fontColor = "white";
+topics[0].fontSize = 55;
 
 //****************************** Functions ******************************
 
