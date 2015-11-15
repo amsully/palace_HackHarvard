@@ -36,8 +36,9 @@ myApp.controller("newTopicCntlr", function($scope, $http){
    		rating: $scope.rating
 	}
 	}).success(function(data){
-		console.log("SUCCESS"); 
-	}).error(function(err){
+		console.log("SUCCESS");
+		console.log(JSON.stringify(data)); 
+			}).error(function(err){
 		console.log(JSON.stringify(err)); 
 	})
 }
