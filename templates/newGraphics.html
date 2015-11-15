@@ -67,10 +67,12 @@ function Content(topic,content) {
         leftY = c.centerY-c.height/2;
         //cover connection lines
         ctx.fillStyle = "rgb(229,255,204)";
-        ctx.fillRect(leftX-10,leftY-10,c.width+20,c.height+20);
+        ctx.fillRect(leftX-c.width/8,leftY-c.height/8,
+                     c.width+c.width/4,c.height+c.height/4);
 
         ctx.fillStyle = "rgb(204,255,104)";
-        ctx.fillRect(leftX-5,leftY-5,c.width+10,c.height+10);
+        ctx.fillRect(leftX-c.width/16,leftY-c.height/16,
+                     c.width+c.width/8,c.height+c.height/8);
 
         ctx.fillStyle = c.fill;
         ctx.fillRect(leftX,leftY,c.width,c.height);
@@ -94,6 +96,15 @@ function Content(topic,content) {
         c.centerX = newCenterX;
         c.centerY = newCenterY;
     }
+
+    c.zoomIn = function() {
+        c.width = c.width*2;
+        c.height = c.height*2;
+    };
+    c.zoomOut = function() {
+        c.width = c.width/2;
+        c.height = c.height/2;
+    };
     return c;
 };
 
@@ -157,6 +168,13 @@ function ContentButton(x,y) {
         b.centerX = x;
         b.centerY = y;
     };
+    b.zoomIn = function() {
+        b.radius = b.radius*2;
+    }
+
+    b.zoomOut = function() {
+        b.radius = b.radius/2;
+    }
 
     return b;
 };
@@ -171,7 +189,12 @@ function Topic(title,rating) {
     //-------------------- attributes --------------------
     t.centerX = defaultCenterX;
     t.centerY = defaultCenterY;
-    t.radius = defaultFontSize*title.length*3/4;
+    if (title == "Palace") {
+        t.radius = defaultFontSize*title.length;
+    } else {
+        t.radius = defaultFontSize*title.length/2;
+    }
+    
 
     t.title = title;
     t.content = [];
@@ -201,13 +224,13 @@ function Topic(title,rating) {
             //cover connection lines
             ctx.fillStyle = "rgb(173,255,47)";//green yellow
             ctx.beginPath();
-            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.arc(t.centerX,t.centerY,t.radius+t.radius/4,0,2*Math.PI);
             ctx.fill();
 
             //draw outline 
             ctx.strokeStyle = "rgb(50,205,50)";//lime green
             ctx.beginPath();
-            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.arc(t.centerX,t.centerY,t.radius+t.radius/8,0,2*Math.PI);
             ctx.stroke();
 
             //display text
@@ -220,23 +243,23 @@ function Topic(title,rating) {
             if (t.title =="Palace") {
                 ctx.fillStyle = "rgb(240,255,255)";//azure;
                 ctx.beginPath();
-                ctx.arc(t.centerX,t.centerY,t.radius+40,0,2*Math.PI);
+                ctx.arc(t.centerX,t.centerY,t.radius+t.radius/4,0,2*Math.PI);
                 ctx.fill();
 
                 ctx.fillStyle = "rgb(135,206,250)";//light sky blue
                 ctx.beginPath();
-                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.arc(t.centerX,t.centerY,t.radius+t.radius/8,0,2*Math.PI);
                 ctx.fill();
             } else {
                 //cover connection lines
                 ctx.fillStyle = "rgb(255,255,224)";//light yellow
                 ctx.beginPath();
-                ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+                ctx.arc(t.centerX,t.centerY,t.radius+t.radius/4,0,2*Math.PI);
                 ctx.fill();
 
                 ctx.fillStyle = "rgb(255,255,150)";
                 ctx.beginPath();
-                ctx.arc(t.centerX,t.centerY,t.radius+10,0,2*Math.PI);
+                ctx.arc(t.centerX,t.centerY,t.radius+t.radius/8,0,2*Math.PI);
                 ctx.fill();
 
                 t.button.draw();
@@ -342,6 +365,24 @@ function Topic(title,rating) {
         t.content.push(Content(t,content));
         t.adjustContentPosition();
     };
+
+    t.zoomIn = function() {
+        t.radius = t.radius*2;
+        t.button.zoomIn();
+        for (var i=0;i<t.content.length;i++) {
+            t.content[i].zoomIn();
+        };
+    };
+    t.zoomOut = function() {
+        if (t.radius>2) {
+            t.radius = t.radius/2;
+            t.button.zoomOut();
+            for (var i=0;i<t.content.length;i++) {
+                t.content[i].zoomOut();
+            };
+        };
+    };
+
     return t;
 };
 topics.push(Topic("Palace","Start",10));
@@ -425,7 +466,7 @@ function adjustPosition() {
 
 function titleExists(title) {
     for (var i=0;i<topics.length;i++) {
-        if (topics[i].tilte==title) {
+        if (topics[i].title==title) {
             return true;
         };
     };
@@ -510,6 +551,20 @@ function moveScreen(dx,dy) {
     adjustPosition();
 }
 
+function zoomIn() {
+    for (var i=1;i<topics.length;i++) {
+        topics[i].zoomIn();
+    };
+    adjustPosition();
+};
+
+function zoomOut() {
+    for (var i=1;i<topics.length;i++) {
+        topics[i].zoomOut();
+    };
+    adjustPosition();
+};
+
 //onKeyDown
 //REQUIRES: event key press happens
 //ENSURES: adjust graphics according to the key pressed
@@ -518,6 +573,8 @@ function onKeyDown(event) {
     var downArrow = 40;
     var leftArrow = 37;
     var rigthArrow = 39;
+    var equal = 187;
+    var dash = 189;
     var d = 200;
     if (event.keyCode == upArrow) {
         moveScreen(0,d);
@@ -527,6 +584,10 @@ function onKeyDown(event) {
         moveScreen(-d,0);
     } else if (event.keyCode == leftArrow) {
         moveScreen(d,0);
+    } else if (event.keyCode == equal) {
+        zoomIn();
+    } else if (event.keyCode == dash) {
+        zoomOut();
     }
 }
 
@@ -597,10 +658,12 @@ function test() {
     topics[9].buildConnectionFrom(topics[1]);
     topics[10].buildConnectionFrom(topics[1]);
     createTopicByRequest("11","...","2",5);
+    createTopicByRequest("Intro to CCS","...","3",5);
     createTopicByRequest("12","...","2",5);
     createTopicByRequest("13","...","2",5);
     createTopicByRequest("14","...","2",5);
     createTopicByRequest("15","...","2",5);
+    createTopicByRequest("13","111","2",5);
 }
 test();
 </script>
