@@ -1,21 +1,409 @@
 <!-- FOr a hacky implementaiton, you can create the angular form for this one input form . ANgular. -->
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Find awesome courses!</title>
+
+    <!-- Bootstrap Core CSS -->
+
+
+    <!-- Custom Fonts -->
+    <link href="http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename ='css/bootstrap.css') }}" media="all" />
+
+
+  
+    <link rel="stylesheet" href="{{ url_for('static', filename ='font-awesome/css/font-awesome.min.css') }}"  type="text/css">
+
+    <!-- Plugin CSS -->
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename ='css/landing-page.css') }}" media="all" />
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
-
+</head>
 <body ng-app="myApp" ng-controller="newTopicCntlr">
-<p>Enter a new topic</p>
+    <script>
+  // This is called with the results from from FB.getLoginStatus().
+  function statusChangeCallback(response) {
+    console.log('statusChangeCallback');
+    console.log(response);
+    // The response object is returned with a status field that lets the
+    // app know the current login status of the person.
+    // Full docs on the response object can be found in the documentation
+    // for FB.getLoginStatus().
+    if (response.status === 'connected') {
+      // Logged into your app and Facebook.
+      testAPI();
+    } else if (response.status === 'not_authorized') {
+      // The person is logged into Facebook, but not your app.
+      document.getElementById('status').innerHTML = 'Please log ' +
+        'into this app.';
+    } else {
+      // The person is not logged into Facebook, so we're not sure if
+      // they are logged into this app or not.
+      document.getElementById('status').innerHTML = 'Please log ' +
+        'into Facebook.';
+    }
+  }
 
- 
- <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_title" placeholder="Topic TItle" required/></center>
-  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "parent_topic" placeholder="Parent Topic" required/></center>
-  <center> <input type="text" ng-required="true" class="form-control"  ng-model = "topic_description" placeholder="Topic Description" required/></center>
+  // This function is called when someone finishes with the Login
+  // Button.  See the onlogin handler attached to it in the sample
+  // code below.
+  function checkLoginState() {
+    FB.getLoginStatus(function(response) {
+      statusChangeCallback(response);
+    });
+  }
 
-  <button style="color:rgb(39,98,117)"  type="button" class="btn btn-default" ng-click="createTopic()">Submit</button>
+  window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '1631757630409331',
+    cookie     : true,  // enable cookies to allow the server to access 
+                        // the session
+    xfbml      : true,  // parse social plugins on this page
+    version    : 'v2.5' // use version 2.2
+  });
+
+  // Now that we've initialized the JavaScript SDK, we call 
+  // FB.getLoginStatus().  This function gets the state of the
+  // person visiting this page and can return one of three states to
+  // the callback you provide.  They can be:
+  //
+  // 1. Logged into your app ('connected')
+  // 2. Logged into Facebook, but not your app ('not_authorized')
+  // 3. Not logged into Facebook and can't tell if they are logged into
+  //    your app or not.
+  //
+  // These three cases are handled in the callback function.
+
+  FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+  });
+
+  };
+
+  // Load the SDK asynchronously
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+  // Here we run a very simple test of the Graph API after login is
+  // successful.  See statusChangeCallback() for when this call is made.
+
+
+  function testAPI() {
+    console.log('Welcome!  Fetching your information.... ');
+    FB.api('/me', function(response) {
+                console.log(JSON.stringify(response)); 
+
+      console.log('Successful login for: ' + response.name);
+      document.getElementById('status').innerHTML =
+        'Thanks for logging in, ' + response.name + '!'; 
+    // creating a new user int ht edatabase. )
+   
+      $.ajax({
+        type: "POST", 
+        url: "http://localhost:5000/api/user",
+      data: {
+       "name": response.name, 
+       "id": response.id
+      },
+       success: function(msg){
+    //    alert('wow' + msg);
+        console.log("SUCCESS")
+    }
+   }).done(function (data) {
+      console.log(data);
+     });
+})
+}
+
+
+</script>
+
+<!--
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-fixed-top topnav" role="navigation">
+        <div class="container topnav">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand topnav" href="#" style = "margin-top: -32px; color: #6699CC"><h1>palace</h1></a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#about">Go to your Account</a>
+                    </li>
+                    <li>
+                        <a href="#services">About</a>
+                    </li>
+                    <li>
+                        <a href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+
+    
+<div id="canvasWrapper" style="margin-top: 70px; margin-left: 10px; display: inline-block" >
+<canvas id="myCanvas" height="500" width="700" style="border:0px solid #000000;">
+</canvas>
+</div>
+<div class="formwrapper" style="margin-top: -500px">
+    <div class="container">
+    	    <div class="col-md-4 col-md-offset-8">
+        	    <div class="form-wrap">
+                <center><h1>Submit a Course</h1></center>
+                    <form role="form" action="javascript:;" method="post" id="login-form" autocomplete="off">
+                        <div class="form-group">
+                            <label>Topic Title</label>
+                            <input type="text" ng-required="true" class="form-control"  ng-model = "topic_title" placeholder="Python Functions" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>Parent Topic</label>
+                            <input type="text" ng-required="true" class="form-control"  ng-model = "parent_topic" placeholder="Parent Topic" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>Topic Description</label>
+                           <input type="text" ng-required="true" class="form-control"  ng-model = "topic_description" placeholder="Topic Description" required/>
+                        </div>
+                       
+                       <button style="color:rgb(39,98,117)" type="button" id="btn-login" class="btn btn-custom btn-lg btn-block" ng-click="createTopic()">Submit</button>
+                        
+                       
+                    </form>
+        	    </div>
+    		</div> <!-- /.col-xs-12 -->
+    </div> <!-- /.container -->
+</div>
+
+
+
 
 
 <script> 
+
+
+// <html>
+
+// <canvas id="myCanvas" width="1366" height="768"
+//         style="border:0px solid #000000;">
+// </canvas>
+// <script>
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var intervalId;
+var timerDelay = 100;
+var rectangles = [];
+var clicked = undefined;
+var dragged = undefined;
+var quit = false;
+
+function Rectangle(x,y) {
+
+    // 
+    // r.title = 
+
+
+    var r = {};
+    r.x = x-25;
+    r.y = y-25;
+    r.cx = x;
+    r.cy = y;
+    r.w = 50;
+    r.h = 50;
+    r.output = [];
+    r.input = [];
+    r.fill = "black";
+    r.drawConnection = function() { 
+        ctx.strokeStyle = "red";
+        for (var i=0;i<r.output.length;i++) {
+            ctx.beginPath();
+            ctx.moveTo(r.cx,r.cy);
+            ctx.lineTo(r.output[i].cx,r.output[i].cy);
+            ctx.stroke();
+        }   
+    }
+    r.draw = function() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(r.x,r.y,r.w,r.h);
+        ctx.strokeStyle = r.fill;
+        ctx.strokeRect(r.x,r.y,r.w,r.h);
+    }
+    r.clicked = function(clickX,clickY) {
+        if ((r.x<=clickX) && (clickX<=(r.x+r.w)) && 
+            (r.y<=clickY) && (clickY<=(r.y+r.h))) {
+            return true;
+        }
+        return false;
+        }
+    r.connectTo = function(other) {
+        r.output.push(other);
+        other.input.push(r);
+    }
+    return r;
+}
+
+
+function redrawAll() {
+    // erase everything -- not efficient, but simple!
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i=0;i<rectangles.length;i++) {
+        rectangles[i].drawConnection();
+    }
+    for (var i=0;i<rectangles.length;i++) {
+        rectangles[i].draw();
+    }
+}
+
+function onTimer() {
+    if (quit) return;
+    redrawAll();
+}
+
+function onKeyDown(event) {
+    if (quit) return;
+    var qCode = 81;
+    if (event.keyCode === qCode) {
+        clearInterval(intervalId);
+        // ctx.clearRect(0, 0, 400, 400);
+        ctx.fillStyle = "rgba(128,128,128,0.75)";
+        ctx.fillRect(0, 0, 400, 400);
+        quit = true;
+    }
+}
+
+function onKeyDownWrapper(event) {
+    onKeyDown(event);
+    redrawAll();
+}
+
+function onClick(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    for (var i=0;i<rectangles.length;i++) {
+        if (rectangles[i].clicked(x,y)==true) {
+            if (clicked == undefined) {
+                clicked = rectangles[i];
+            } else if (clicked!=rectangles[i]) {
+                clicked.connectTo(rectangles[i]);
+                clicked = undefined;
+            }
+            return;
+        }
+    }
+    rectangles.push(Rectangle(x,y));
+}
+
+function onClickWrapper(event) {
+    onClick(event);
+    redrawAll();
+}
+
+function onMouseDown(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    for (var i=0;i<rectangles.length;i++) {
+        if (rectangles[i].clicked(x,y)==true) {
+            if (dragged == undefined) {
+                dragged = rectangles[i];
+                return;
+            }
+        }
+    }
+}
+
+function onMouseDownWrapper(event) {
+    onMouseDown(event);
+    redrawAll();
+}
+
+function onMouseMove(event) {
+    if (dragged!=undefined) {
+        var x = event.pageX - canvas.offsetLeft;  
+        var y = event.pageY - canvas.offsetTop;
+        dragged.cx = x;
+        dragged.cy = y;
+        dragged.x = x-dragged.w/2;
+        dragged.y = y-dragged.h/2;
+        return;
+    }
+}
+
+function onMouseMoveWrapper(event) {
+    onMouseMove(event);
+    redrawAll();
+}
+
+function onMouseUp(event) {
+    if (dragged!=undefined) {
+        var x = event.pageX - canvas.offsetLeft;  
+        var y = event.pageY - canvas.offsetTop;
+        dragged.cx = x;
+        dragged.cy = y;
+        dragged.x = x-dragged.w/2;
+        dragged.y = y-dragged.h/2;
+        dragged = undefined;
+        return;
+    }
+}
+
+function onMouseUpWrapper(event) {
+    onMouseUp(event);
+    redrawAll();
+}
+
+function run() {
+    canvas.addEventListener('keydown', onKeyDownWrapper, false);
+    canvas.addEventListener('click', onClickWrapper, false);
+    canvas.addEventListener('mousedown',onMouseDownWrapper,false);
+    canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
+    canvas.addEventListener('mouseup',onMouseUpWrapper,false);
+    // make canvas focusable, then give it focus!
+    canvas.setAttribute('tabindex','0');
+    canvas.focus();
+    intervalId = setInterval(onTimer, timerDelay);
+}
+
+run();
+ 
+
+
+
+
 //This creates a new collection, but is empty. 
 var myApp = angular.module("myApp", []); 
 myApp.controller("newTopicCntlr", function($scope, $http){
@@ -26,6 +414,10 @@ myApp.controller("newTopicCntlr", function($scope, $http){
 
 	$scope.createTopic = function(){
 	console.log("The title gotten is "+	$scope.topic_title+" the description is "+ $scope.topic_description +" the parent topic is "+$scope.parent_topic  ); 
+
+
+	rectangles.push(Rectangle(25,25, $scope.topic_title, "Rectangle"));
+
 	$http({
 	method: "POST",
       		url: "http://127.0.0.1:5000/topic/newTopic", 
@@ -43,6 +435,9 @@ myApp.controller("newTopicCntlr", function($scope, $http){
 	})
 }
 }); 
+
+
+
 
 </script>
 
