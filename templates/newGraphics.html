@@ -32,9 +32,6 @@ var defaultButtonColor = "rgb(250,128,114)";//salmon
 var defaultStroke = "rgb(255,215,0)";//gold
 var defaultFill = "rgb(255,250,205)";//lemon chiffon
 
-var defaultTopicShape = "Circle";
-var defaultContentShape = "Rectangle";
-
 //default color for connection lines
 var connectionStroke = "green";
 var contentStroke = "blue";
@@ -176,7 +173,6 @@ function Topic(title,rating) {
     t.content = [];
     t.rating = rating;
 
-    t.shape = defaultTopicShape;
     t.fontSize = defaultFontSize;
     t.font = defaultFont;
 
@@ -192,10 +188,30 @@ function Topic(title,rating) {
 
     t.button = ContentButton(t.centerX+t.radius,t.centerY-t.radius);
 
+    t.hovered = false;
+
     //-------------------- methods --------------------
     //drawing 
     t.drawItself = function() {
-        if (t.shape=="Circle") {
+        if (t.hovered) {
+            //cover connection lines
+            ctx.fillStyle = "rgb(173,255,47)";//green yellow
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.fill();
+
+            //draw outline 
+            ctx.strokeStyle = "rgb(50,205,50)";//lime green
+            ctx.beginPath();
+            ctx.arc(t.centerX,t.centerY,t.radius+20,0,2*Math.PI);
+            ctx.stroke();
+
+            //display text
+            ctx.font = "bold 40px Arial";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgb(240,255,255)";//azure
+            ctx.fillText(t.title,t.centerX,t.centerY+40/3);
+        } else {
             //cover connection lines
             ctx.fillStyle = t.fill;
             ctx.beginPath();
@@ -215,9 +231,9 @@ function Topic(title,rating) {
             ctx.fillText(t.title,t.centerX,t.centerY+t.fontSize/3);
 
             if (t.title!="Palace") {
-                t.button.draw();
+            t.button.draw();
             };
-        };
+        }
     };
     t.drawConnectionLines = function() {
         ctx.strokeStyle = connectionStroke;
@@ -230,18 +246,13 @@ function Topic(title,rating) {
     };
 
     //checking
-    t.isClickedOn = function(x,y) {
-        if (t.shape=="Rectangle") {
-            var x0,y0,x1,y1;
-            x0,y0 = t.centerX-t.radius,t.t.centerY-t.radius;
-            x1,y1 = (x0+t.radius*2),(y0+t.radius*2);
-            if ((x0<=x) && (x<=x1) && (y0<=y) && (y<=y1)) {
-                return true;
-            } else {
-                return false;
-            };
-        };
-        return 42;
+    t.isHoveredOn = function(x,y) {
+        if (Math.pow((Math.pow((x-t.centerX),2)+
+                      Math.pow((y-t.centerY),2)),0.5)<=t.radius) {
+            return true;
+        } else {
+            return false;
+        }
     };
     t.isConnectedTo = function(topic) {
         for (var i=0;i<t.sons.length;i++) {
@@ -312,7 +323,7 @@ topics[0].reposition(canvas.width/2,canvas.height/2);
 topics[0].fill = "rgb(0,191,255)";//deep sky bluee
 topics[0].stroke = "rgb(0,0,128)";//navy
 topics[0].font = "bolder 55px Arial";
-topics[0].fontColor = "white";
+topics[0].fontColor = "rgb(240,255,255)";//azure
 topics[0].fontSize = 55;
 
 //****************************** Functions ******************************
@@ -493,6 +504,18 @@ function onKeyDown(event) {
     }
 }
 
+function onMouseMove(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    for (var i=1;i<topics.length;i++) {
+        if (topics[i].isHoveredOn(x,y)==true) {
+            topics[i].hovered = true;
+        } else {
+            topics[i].hovered = false;
+        }
+    }
+}
+
 
 //Event Based Animation Wrappers [Controller]
 //After processing an event, redraw the canvas
@@ -504,12 +527,17 @@ function onKeyDownWrapper(event) {
     onKeyDown(event);
     redrawAll();};
 
+function onMouseMoveWrapper(event) {
+    onMouseMove(event);
+    redrawAll();};
+
 //run
 //REQUIRES: None
 //ENSURES: Driving function
 function run() {
     canvas.addEventListener('click', onClickWrapper, false);
     canvas.addEventListener('keydown',onKeyDownWrapper, false);
+    canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
     // make canvas focusable, then give it focus!
     canvas.setAttribute('tabindex','0');
     canvas.focus();
