@@ -1,0 +1,183 @@
+<html>
+
+<canvas id="myCanvas" width="1366" height="768"
+        style="border:0px solid #000000;">
+</canvas>
+<script>
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var intervalId;
+var timerDelay = 100;
+var rectangles = [];
+var clicked = undefined;
+var dragged = undefined;
+var quit = false;
+
+function Rectangle(x,y) {
+    var r = {};
+    r.x = x-25;
+    r.y = y-25;
+    r.cx = x;
+    r.cy = y;
+    r.w = 50;
+    r.h = 50;
+    r.output = [];
+    r.input = [];
+    r.fill = "black";
+    r.drawConnection = function() { 
+        ctx.strokeStyle = "red";
+        for (var i=0;i<r.output.length;i++) {
+            ctx.beginPath();
+            ctx.moveTo(r.cx,r.cy);
+            ctx.lineTo(r.output[i].cx,r.output[i].cy);
+            ctx.stroke();
+        }   
+    }
+    r.draw = function() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(r.x,r.y,r.w,r.h);
+        ctx.strokeStyle = r.fill;
+        ctx.strokeRect(r.x,r.y,r.w,r.h);
+    }
+    r.clicked = function(clickX,clickY) {
+        if ((r.x<=clickX) && (clickX<=(r.x+r.w)) && 
+            (r.y<=clickY) && (clickY<=(r.y+r.h))) {
+            return true;
+        }
+        return false;
+        }
+    r.connectTo = function(other) {
+        r.output.push(other);
+        other.input.push(r);
+    }
+    return r;
+}
+
+
+function redrawAll() {
+    // erase everything -- not efficient, but simple!
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i=0;i<rectangles.length;i++) {
+        rectangles[i].drawConnection();
+    }
+    for (var i=0;i<rectangles.length;i++) {
+        rectangles[i].draw();
+    }
+}
+
+function onTimer() {
+    if (quit) return;
+    redrawAll();
+}
+
+function onKeyDown(event) {
+    if (quit) return;
+    var qCode = 81;
+    if (event.keyCode === qCode) {
+        clearInterval(intervalId);
+        // ctx.clearRect(0, 0, 400, 400);
+        ctx.fillStyle = "rgba(128,128,128,0.75)";
+        ctx.fillRect(0, 0, 400, 400);
+        quit = true;
+    }
+}
+
+function onKeyDownWrapper(event) {
+    onKeyDown(event);
+    redrawAll();
+}
+
+function onClick(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    for (var i=0;i<rectangles.length;i++) {
+        if (rectangles[i].clicked(x,y)==true) {
+            if (clicked == undefined) {
+                clicked = rectangles[i];
+            } else if (clicked!=rectangles[i]) {
+                clicked.connectTo(rectangles[i]);
+                clicked = undefined;
+            }
+            return;
+        }
+    }
+    rectangles.push(Rectangle(x,y));
+}
+
+function onClickWrapper(event) {
+    onClick(event);
+    redrawAll();
+}
+
+function onMouseDown(event) {
+    var x = event.pageX - canvas.offsetLeft;  
+    var y = event.pageY - canvas.offsetTop;
+    for (var i=0;i<rectangles.length;i++) {
+        if (rectangles[i].clicked(x,y)==true) {
+            if (dragged == undefined) {
+                dragged = rectangles[i];
+                return;
+            }
+        }
+    }
+}
+
+function onMouseDownWrapper(event) {
+    onMouseDown(event);
+    redrawAll();
+}
+
+function onMouseMove(event) {
+    if (dragged!=undefined) {
+        var x = event.pageX - canvas.offsetLeft;  
+        var y = event.pageY - canvas.offsetTop;
+        dragged.cx = x;
+        dragged.cy = y;
+        dragged.x = x-dragged.w/2;
+        dragged.y = y-dragged.h/2;
+        return;
+    }
+}
+
+function onMouseMoveWrapper(event) {
+    onMouseMove(event);
+    redrawAll();
+}
+
+function onMouseUp(event) {
+    if (dragged!=undefined) {
+        var x = event.pageX - canvas.offsetLeft;  
+        var y = event.pageY - canvas.offsetTop;
+        dragged.cx = x;
+        dragged.cy = y;
+        dragged.x = x-dragged.w/2;
+        dragged.y = y-dragged.h/2;
+        dragged = undefined;
+        return;
+    }
+}
+
+function onMouseUpWrapper(event) {
+    onMouseUp(event);
+    redrawAll();
+}
+
+function run() {
+    canvas.addEventListener('keydown', onKeyDownWrapper, false);
+    canvas.addEventListener('click', onClickWrapper, false);
+    canvas.addEventListener('mousedown',onMouseDownWrapper,false);
+    canvas.addEventListener('mousemove',onMouseMoveWrapper,false);
+    canvas.addEventListener('mouseup',onMouseUpWrapper,false);
+    // make canvas focusable, then give it focus!
+    canvas.setAttribute('tabindex','0');
+    canvas.focus();
+    intervalId = setInterval(onTimer, timerDelay);
+}
+
+run();
+ 
+
+</script>
+</html>
